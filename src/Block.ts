@@ -2,6 +2,7 @@ import { IntelHexRecordObject } from "./tools/parseRecord";
 
 export default class Block{
   startingAddress:number;
+  data:Bu
 
   constructor(startingAddress:number){
     this.startingAddress = startingAddress;
@@ -19,8 +20,13 @@ export default class Block{
 
 
 
+      const success = false;
 
-      return false;
+      if (!success) {
+
+      }
+
+      return success;
     }
   }
 }
