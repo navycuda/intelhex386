@@ -1,5 +1,9 @@
 import { IntelHexRecordObject } from "./parseRecord";
 
+/** ## calculateCheckSum
+ * Least significant byte two's compliment checksum calculation for the intel
+ * hex format.
+ */
 const calculateCheckSum = (record:IntelHexRecordObject):number => {
   const values = [
     record.length,

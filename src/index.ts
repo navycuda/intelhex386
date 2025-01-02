@@ -8,3 +8,5 @@ const intelHex386Document = fs.readFileSync("/Users/navycuda/work/c/cummins_v2/e
 
 
 const intelHex386 = new IntelHex386(intelHex386Document);
+
+console.log(intelHex386);

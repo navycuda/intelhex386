@@ -14,9 +14,10 @@ export default class IntelHex386{
 
   constructor(intelHex386Document:string){
     const parseStartTime = Date.now();
-    this.blocks = [];
+    this.blocks = [
+      new Block()
+    ];
     const currentBlock = () => this.blocks[this.blocks.length - 1];
-    let currentAddress = 0 >>> 0;
 
     const intelHex386Lines = intelHex386Document.split(/\r?\n/);
 
@@ -36,22 +37,15 @@ export default class IntelHex386{
 
 
     for (const record of records){
-      if (record.type === 0x00){
-        
-      }
-      if (record.type === 0x01){
-        break;
-      }
-      if (record.type === 0x04){
-
+      if (!currentBlock().addRecord(record)){
+        this.blocks.push(new Block());
+        currentBlock().addRecord(record);
       }
     }
 
 
 
-
     this.timeToProcess = Date.now() - parseStartTime;
-    console.log({ IntelHex386: this });
   }
 
 
