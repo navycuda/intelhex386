@@ -3,7 +3,29 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.IntelHexRecordType = void 0;
 const calculateCheckSum_1 = __importDefault(require("./calculateCheckSum"));
+var IntelHexRecordType;
+(function (IntelHexRecordType) {
+    IntelHexRecordType[IntelHexRecordType["Data"] = 0] = "Data";
+    IntelHexRecordType[IntelHexRecordType["EndOfFile"] = 1] = "EndOfFile";
+    IntelHexRecordType[IntelHexRecordType["ExtendedLinearAddress"] = 4] = "ExtendedLinearAddress";
+})(IntelHexRecordType || (exports.IntelHexRecordType = IntelHexRecordType = {}));
+/** ## parseRecord
+ * Takes the intel hex record and parses it into an object for use in the program
+ *
+ * @example
+ * :020000040800F2
+ * |||||||||||||^^  CheckSum
+ * |||||||||^^^^--  Data
+ * |||||||^^------  Record Type
+ * |||||||            0x00 - Data
+ * |||||||            0x01 - End Of File
+ * |||||||            0x04 - Extended Linear Address
+ * |||^^^^--------  16-bit Address
+ * |^^------------  Length
+ * ^--------------  Intel Hex Record prefix
+ */
 const parseRecord = (intelHexRecord) => {
     const hexLength = intelHexRecord.substring(1, 3);
     const length = parseInt(hexLength, 16);
@@ -14,28 +36,20 @@ const parseRecord = (intelHexRecord) => {
     const hexCheckSum = intelHexRecord.substring(9 + dataLength, 11 + dataLength);
     const address = parseInt(hexAddress, 16);
     const type = parseInt(hexType, 16);
-    const data = hexData.map(b => parseInt(b, 16));
+    const data = hexData.map(b => (parseInt(b, 16) & 0xFF));
     const checkSum = parseInt(hexCheckSum, 16);
-    const calculatedCheckSum = (0, calculateCheckSum_1.default)([length, address & 0xFF, (address >> 8) & 0xFF, type, ...data]);
     const record = {
         length,
-        get address() {
-            return (type === 0x00) ? address : (data[0] << 24 + data[1] << 16) >>> 0;
-        },
+        address,
         type,
         data,
-        checkSum
+        checkSum,
+        getEla() {
+            return (data[0] << 24 + data[1] << 16) >>> 0;
+        }
     };
-    if (calculatedCheckSum !== checkSum) {
-        console.log({
-            hexLength,
-            hexAddress,
-            hexType,
-            hexData,
-            hexCheckSum
-        });
-        console.log(record);
-        throw new Error(`Bad Checksum ==> , ${intelHexRecord} - ${checkSum}/${calculatedCheckSum}`);
+    if ((0, calculateCheckSum_1.default)(record) !== checkSum) {
+        throw new Error(`Bad Checksum ==> , ${intelHexRecord}`);
     }
     return record;
 };

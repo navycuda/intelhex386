@@ -5,10 +5,16 @@ export default class Block{
   address:undefined|number;
   private _tempData:undefined|number[];
 
-  constructor(){
+  constructor();
+  constructor(blockJsonObject:BlockJsonObject);
+  constructor(blockJsonObject?:BlockJsonObject){
+    if (blockJsonObject){
+      this.address = blockJsonObject.address;
+      this.data = Buffer.from(blockJsonObject.data, 'base64');
+    }
   }
 
-  /** ### addRecord
+  /** ### Block.addRecord(record)
    * Method to add a record to the block.  Part of the Intel Hex 386 instantiation process.
    * 
    * Returns true as long as the block can accept a new record.  It returns false if the provided
@@ -20,13 +26,14 @@ export default class Block{
     // of this block.
 
     // If the address hasn't been set, this is the first record.
-    if (!this.address){
+    if (this.address === undefined){
       // If the first record is not an extended linear address the block cannot be properly
       // instantiated and must throw an error
       if (record.type !== IntelHexRecordType.ExtendedLinearAddress){
         throw new Error('Tried to instantiate a block without providing an extended linear address first');
       }
       this.address = record.getEla();
+      console.log(this);
       return true;
     }
     
@@ -59,5 +66,45 @@ export default class Block{
 
     return true;
   }
-    
+
+
+
+  get serializeAs() {
+    const block = this;
+    return {
+      intelHex386(){ return serializeAsIntelHex(block); },
+      json(){ return serializeAsJson(block); }
+    }
+  }
+}
+
+const serializeAsIntelHex = (block:Block) => {
+  const maximumRecordLength = 32; // The maximum length of the intel hex record
+  let remaining = block.data!.length >>> 0;
+  let serializedIntelHexData = '';
+
+  while (remaining > 0) {
+
+    // Create the first extended linear address
+
+    // Create additional extended linear addresses as needed
+
+    // Add the data records
+
+  }
+
+  return serializedIntelHexData;
+}
+
+export interface BlockJsonObject{
+  address: number;
+  data: string;
+}
+
+const serializeAsJson = (block:Block,pretty:boolean = false):string => {
+  const newBlock = {
+    address: block.address,
+    data: block.data!.toString('base64')
+  };
+  return !pretty ? JSON.stringify(newBlock) : JSON.stringify(newBlock,null,2);
 }
