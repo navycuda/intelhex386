@@ -49,19 +49,8 @@ class IntelHex386 {
         }
         setTimeToProcess();
     }
-    /** ## serializeAs
-     * Available serialization formats: IntelHex386, Json
-     */
-    get serializeAs() {
-        const intelHex386 = this;
-        return {
-            intelHex386() { return serializeAsIntelHex(intelHex386); },
-            /** ### json
-             * Serialize into a specialized, compact json document.
-             */
-            json() { return serializeAsJson(intelHex386); },
-        };
-    }
+    serialize() { return serializeAsIntelHex(this); }
+    toJSON() { return serializeAsJson(this); }
 }
 exports.default = IntelHex386;
 const serializeAsIntelHex = (intelHex386) => {

@@ -88,13 +88,9 @@ interface IntelHex386JsonObject{
   blocks: BlockJsonObject[];
 }
 
-const serializeAsJson = (intelHex386:IntelHex386,pretty:boolean = false):string => {
-
-  const jsonObject = {
+const serializeAsJson = (intelHex386:IntelHex386,pretty:boolean = false):IntelHex386JsonObject => {
+  return {
     headerArray: intelHex386.headerArray,
-    blocks: intelHex386.blocks.map(b => b.serializeAs.json())
+    blocks: intelHex386.blocks.map(b => b.serializeAs.jsonObject())
   }
-
-
-  return !pretty ? JSON.stringify(intelHex386) : JSON.stringify(intelHex386,null,2);
 }

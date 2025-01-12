@@ -49,6 +49,11 @@ export default class Block{
     const currentAddress = this.address + length;
     const recordAbsoluteAddress = (this.address & 0xFFFF0000) + record.address;
 
+    // **** Add a method to check extended linear address
+
+
+
+
     // Check to see if the supplied record is sequential with this block
     // If it isn't, then finalize the instantiation of the block and return false.
     if (currentAddress !== recordAbsoluteAddress){
@@ -73,7 +78,7 @@ export default class Block{
     const block = this;
     return {
       intelHex386(){ return serializeAsIntelHex(block); },
-      json(){ return serializeAsJson(block); }
+      jsonObject(){ return serializeAsJsonObject(block); }
     }
   }
 }
@@ -101,10 +106,9 @@ export interface BlockJsonObject{
   data: string;
 }
 
-const serializeAsJson = (block:Block,pretty:boolean = false):string => {
-  const newBlock = {
-    address: block.address,
+const serializeAsJsonObject = (block:Block,pretty:boolean = false):BlockJsonObject => {
+  return {
+    address: block.address!,
     data: block.data!.toString('base64')
   };
-  return !pretty ? JSON.stringify(newBlock) : JSON.stringify(newBlock,null,2);
 }
