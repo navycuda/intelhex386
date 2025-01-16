@@ -29,7 +29,7 @@ export default class IntelHex386{
     this.blocks = [
       new Block()
     ];
-    const currentBlock = () => this.blocks[this.blocks.length - 1];
+    const getCurrentBlock = () => this.blocks[this.blocks.length - 1];
 
     // Remove carriage returns and split the document into an array of strings
     // at the new line characters.
@@ -49,10 +49,9 @@ export default class IntelHex386{
 
     // Instantiate the blocks by feeding them records
     for (const record of records){
-      console.log(record);
-      if (!currentBlock().addRecord(record)){
+      if (!getCurrentBlock().addRecord(record)){
         this.blocks.push(new Block());
-        currentBlock().addRecord(record);
+        getCurrentBlock().addRecord(record);
       }
     }
 

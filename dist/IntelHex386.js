@@ -22,7 +22,7 @@ class IntelHex386 {
         this.blocks = [
             new Block_1.default()
         ];
-        const currentBlock = () => this.blocks[this.blocks.length - 1];
+        const getCurrentBlock = () => this.blocks[this.blocks.length - 1];
         // Remove carriage returns and split the document into an array of strings
         // at the new line characters.
         const intelHex386Lines = value.replace(/\r/g, '').split(/\n/);
@@ -41,16 +41,15 @@ class IntelHex386 {
         const records = intelHexArray.map(r => (0, parseRecord_1.default)(r));
         // Instantiate the blocks by feeding them records
         for (const record of records) {
-            console.log(record);
-            if (!currentBlock().addRecord(record)) {
+            if (!getCurrentBlock().addRecord(record)) {
                 this.blocks.push(new Block_1.default());
-                currentBlock().addRecord(record);
+                getCurrentBlock().addRecord(record);
             }
         }
         setTimeToProcess();
     }
     serialize() { return serializeAsIntelHex(this); }
-    toJSON() { return serializeAsJson(this); }
+    toJSON() { return serializeAsJsonObject(this); }
 }
 exports.default = IntelHex386;
 const serializeAsIntelHex = (intelHex386) => {
@@ -67,10 +66,9 @@ const serializeAsIntelHex = (intelHex386) => {
     serializedIntelHex386 += ':00000001FF';
     return serializedIntelHex386;
 };
-const serializeAsJson = (intelHex386, pretty = false) => {
-    const jsonObject = {
+const serializeAsJsonObject = (intelHex386, pretty = false) => {
+    return {
         headerArray: intelHex386.headerArray,
-        blocks: intelHex386.blocks.map(b => b.serializeAs.json())
+        blocks: intelHex386.blocks.map(b => b.serializeAs.jsonObject())
     };
-    return !pretty ? JSON.stringify(intelHex386) : JSON.stringify(intelHex386, null, 2);
 };

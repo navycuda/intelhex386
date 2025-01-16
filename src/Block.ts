@@ -30,10 +30,10 @@ export default class Block{
       // If the first record is not an extended linear address the block cannot be properly
       // instantiated and must throw an error
       if (record.type !== IntelHexRecordType.ExtendedLinearAddress){
+        // console.log("if (record.type !== IntelHexRecordType.ExtendedLinearAddress)", {block:this,record});
         throw new Error('Tried to instantiate a block without providing an extended linear address first');
       }
-      this.address = record.getEla();
-      console.log(this);
+      this.address = record.getEla()!;
       return true;
     }
     
@@ -45,18 +45,43 @@ export default class Block{
       this._tempData = [];
     }
 
+
+    
+
+
     const length = this._tempData.length;
-    const currentAddress = this.address + length;
-    const recordAbsoluteAddress = (this.address & 0xFFFF0000) + record.address;
+    const currentAddress = (this.address + length) >>> 0;
+    const recordAbsoluteAddress = ((this.address & 0xFFFF0000) + record.address) >>> 0;
+
+
+
+    if (record.type === IntelHexRecordType.ExtendedLinearAddress){
+      console.log("if (record.type === IntelHexRecordType.ExtendedLinearAddress)",
+        { 
+          currentAddress : recordAbsoluteAddress.toString(16),
+          recordAbsoluteAddress : recordAbsoluteAddress.toString(16),
+          ela: record.getEla()?.toString(16)
+        })
+      if (record.getEla() === currentAddress + 1){
+        console.log("if (record.getEla() === currentAddress)");
+        this.address += 0x10000;
+        return true;
+      }
+    }
+
 
     // **** Add a method to check extended linear address
 
-
+    if (record.type === IntelHexRecordType.EndOfFile){
+      // console.log("EndOfFile");
+      return true;
+    }
 
 
     // Check to see if the supplied record is sequential with this block
     // If it isn't, then finalize the instantiation of the block and return false.
     if (currentAddress !== recordAbsoluteAddress){
+      // console.log("if (currentAddress !== recordAbsoluteAddress)", {block:this,record, currentAddress, recordAbsoluteAddress});
       this.data = Buffer.from(this._tempData as number[]);
       delete this._tempData;
       return false;

@@ -45,7 +45,10 @@ const parseRecord = (intelHexRecord) => {
         data,
         checkSum,
         getEla() {
-            return (data[0] << 24 + data[1] << 16) >>> 0;
+            if (this.type !== IntelHexRecordType.ExtendedLinearAddress) {
+                return null;
+            }
+            return ((data[0] << 24) + (data[1] << 16)) >>> 0;
         }
     };
     if ((0, calculateCheckSum_1.default)(record) !== checkSum) {
