@@ -1,5 +1,7 @@
 import IntelHex386 from "./IntelHex386";
 export default IntelHex386;
+import fs from "fs";
+
 
 
 import fs from "fs";
@@ -9,4 +11,9 @@ const intelHex386Document = fs.readFileSync("/Users/navycuda/work/c/cummins_v2/e
 
 const intelHex386 = new IntelHex386(intelHex386Document);
 
-console.log(intelHex386);
+
+const intelHex386Json = JSON.stringify(intelHex386,null,2);
+
+fs.writeFileSync("intelHex386.json",intelHex386Json,"utf8")
+
+console.log('complete');
