@@ -61,7 +61,7 @@ export default class IntelHex386{
 
 
   serialize(){ return serializeAsIntelHex(this); }
-  toJSON(){ return serializeAsJson(this); }
+  toJSON(){ return serializeAsJsonObject(this); }
 }
 
 const serializeAsIntelHex = (intelHex386:IntelHex386):string => {
@@ -88,7 +88,7 @@ interface IntelHex386JsonObject{
   blocks: BlockJsonObject[];
 }
 
-const serializeAsJson = (intelHex386:IntelHex386,pretty:boolean = false):IntelHex386JsonObject => {
+const serializeAsJsonObject = (intelHex386:IntelHex386,pretty:boolean = false):IntelHex386JsonObject => {
   return {
     headerArray: intelHex386.headerArray,
     blocks: intelHex386.blocks.map(b => b.serializeAs.jsonObject())
