@@ -49,10 +49,10 @@ export default class IntelHex386{
 
     // Instantiate the blocks by feeding them records
     for (const record of records){
-      if (!getCurrentBlock().addRecord(record)){
-        this.blocks.push(new Block());
-        getCurrentBlock().addRecord(record);
-      }
+      if (getCurrentBlock().addRecord(record)){ continue; }
+      console.log('NEW BLOCK ADDED');
+      this.blocks.push(new Block());
+      getCurrentBlock().addRecord(record);
     }
 
     setTimeToProcess();

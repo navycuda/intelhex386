@@ -31,7 +31,6 @@ export enum IntelHexRecordType{
  * ^--------------  Intel Hex Record prefix
  */
 const parseRecord = (intelHexRecord:string):IntelHexRecordObject => {
-
   const hexLength = intelHexRecord.substring(1,3);
   const length = parseInt(hexLength,16);
   const hexAddress = intelHexRecord.substring(3,7);
@@ -40,7 +39,7 @@ const parseRecord = (intelHexRecord:string):IntelHexRecordObject => {
   const hexData = intelHexRecord.substring(9,9+dataLength).split(/(.{2})/).filter(d=>d);
   const hexCheckSum = intelHexRecord.substring(9+dataLength, 11+dataLength);
   
-  const address = parseInt(hexAddress, 16);
+  const address = parseInt(hexAddress, 16) >>> 0;
   const type = parseInt(hexType,16);
   const data = hexData.map(b => (parseInt(b,16) & 0xFF))
   const checkSum = parseInt(hexCheckSum,16);

@@ -4,7 +4,6 @@ import fs from "fs";
 
 
 
-import fs from "fs";
 
 const intelHex386Document = fs.readFileSync("/Users/navycuda/work/c/cummins_v2/ecm_data/xcal/23701EZ45C_mm/23701EZ45C_mm_V3_23.xcal",'utf-8');
 

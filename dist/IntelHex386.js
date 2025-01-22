@@ -42,6 +42,7 @@ class IntelHex386 {
         // Instantiate the blocks by feeding them records
         for (const record of records) {
             if (!getCurrentBlock().addRecord(record)) {
+                console.log('NEW BLOCK ADDED');
                 this.blocks.push(new Block_1.default());
                 getCurrentBlock().addRecord(record);
             }

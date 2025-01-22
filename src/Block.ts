@@ -25,18 +25,24 @@ export default class Block{
     // we need to return false.  However we also must finish the instantiation
     // of this block.
 
+
+    // On the end of file, return true so that a new block is not instantiated
+    if (record.type === IntelHexRecordType.EndOfFile){
+      // console.log("EndOfFile");
+      return true;
+    }
+
     // If the address hasn't been set, this is the first record.
     if (this.address === undefined){
       // If the first record is not an extended linear address the block cannot be properly
       // instantiated and must throw an error
       if (record.type !== IntelHexRecordType.ExtendedLinearAddress){
-        // console.log("if (record.type !== IntelHexRecordType.ExtendedLinearAddress)", {block:this,record});
+        console.log("if (record.type !== IntelHexRecordType.ExtendedLinearAddress)", {block:this,record});
         throw new Error('Tried to instantiate a block without providing an extended linear address first');
       }
       this.address = record.getEla()!;
       return true;
     }
-    
 
     // If _tempData is still undefined, the address from the first data record must be
     // added to the block address to set the actual starting address of the block
@@ -45,16 +51,33 @@ export default class Block{
       this._tempData = [];
     }
 
-
+    // Setup the working addresses
+    const length = this._tempData.length;
+    const currentAddress = (this.address + length) >>> 0;
+    const recordAbsoluteAddress = (
+      record.getEla() !== null ?
+      record.getEla()! :
+      ((this.address & 0xFFFF0000) + record.address) >>> 0
+    );
     
 
 
-    const length = this._tempData.length;
-    const currentAddress = (this.address + length) >>> 0;
-    const recordAbsoluteAddress = ((this.address & 0xFFFF0000) + record.address) >>> 0;
+
+    // **** Add a method to check extended linear address
 
 
 
+
+    // Check to see if the supplied record is sequential with this block
+    // If it isn't, then finalize the instantiation of the block and return false.
+    if (currentAddress !== recordAbsoluteAddress){
+      console.log("if (currentAddress !== recordAbsoluteAddress)", {block:this,record, currentAddress, recordAbsoluteAddress});
+      this.data = Buffer.from(this._tempData as number[]);
+      delete this._tempData;
+      return false;
+    }
+
+    // Deal with the extended linear address
     if (record.type === IntelHexRecordType.ExtendedLinearAddress){
       console.log("if (record.type === IntelHexRecordType.ExtendedLinearAddress)",
         { 
@@ -62,29 +85,12 @@ export default class Block{
           recordAbsoluteAddress : recordAbsoluteAddress.toString(16),
           ela: record.getEla()?.toString(16)
         })
-      if (record.getEla() === currentAddress + 1){
+      if (recordAbsoluteAddress === currentAddress){
         console.log("if (record.getEla() === currentAddress)");
         this.address += 0x10000;
         return true;
       }
-    }
-
-
-    // **** Add a method to check extended linear address
-
-    if (record.type === IntelHexRecordType.EndOfFile){
-      // console.log("EndOfFile");
-      return true;
-    }
-
-
-    // Check to see if the supplied record is sequential with this block
-    // If it isn't, then finalize the instantiation of the block and return false.
-    if (currentAddress !== recordAbsoluteAddress){
-      // console.log("if (currentAddress !== recordAbsoluteAddress)", {block:this,record, currentAddress, recordAbsoluteAddress});
-      this.data = Buffer.from(this._tempData as number[]);
-      delete this._tempData;
-      return false;
+      // return false;
     }
 
     // Add the data to the temporary data storage.
@@ -134,6 +140,6 @@ export interface BlockJsonObject{
 const serializeAsJsonObject = (block:Block,pretty:boolean = false):BlockJsonObject => {
   return {
     address: block.address!,
-    data: block.data!.toString('base64')
+    data: block.data?.toString('base64') || "no data"
   };
 }
