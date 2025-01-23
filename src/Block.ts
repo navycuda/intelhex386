@@ -1,4 +1,5 @@
 import { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord";
+import serializeRecord from "./tools/serializeRecord";
 
 export default class Block{
   data:undefined|Buffer;
@@ -36,6 +37,11 @@ export default class Block{
     const { length, address, type, data, getExtendedLinearAddress } = record;
     const currentAddress = () => this.address + this._tempData!.length;
 
+    const finishBlock = () => {
+      this.data = Buffer.from(this._tempData!);
+      delete this._tempData;
+    }
+
     switch (type){
       case IntelHexRecordType.Data:{
         if (this._tempData!.length === 0){
@@ -47,6 +53,7 @@ export default class Block{
         break;
       }
       case IntelHexRecordType.EndOfFile:{
+        finishBlock();
         break;
       }
       case IntelHexRecordType.ExtendedLinearAddress:{
@@ -57,8 +64,7 @@ export default class Block{
           this.address += ela!;
         }
         if (ela !== currentAddress()) {
-          this.data = Buffer.from(this._tempData!);
-          delete this._tempData;
+          finishBlock();
           return false;
         }
         break;
@@ -80,21 +86,34 @@ export default class Block{
 }
 
 const serializeAsIntelHex = (block:Block) => {
-  const maximumRecordLength = 32; // The maximum length of the intel hex record
-  let remaining = block.data!.length >>> 0;
-  let serializedIntelHexData = '';
+  let blockRecords = "";
+  let cursorPosition = 0 >>> 0;
+  const endAddress = (block.address + block.data!.length) >>> 0;
 
-  while (remaining > 0) {
+  const getCurrentAddress = () => (block.address + cursorPosition);
+  const getBytesRemaining = () => (endAddress - getCurrentAddress());
 
-    // Create the first extended linear address
+  do {
+    const currentAddress = getCurrentAddress();
+    const bytesRemaining = getBytesRemaining();
 
-    // Create additional extended linear addresses as needed
+    if (!blockRecords){
+      blockRecords += serializeRecord(currentAddress,IntelHexRecordType.ExtendedLinearAddress);
+    } else if (currentAddress % 0x1000 === 0){ // Handle extra linear address setps
+      blockRecords += serializeRecord(currentAddress,IntelHexRecordType.ExtendedLinearAddress);
+    }
 
-    // Add the data records
+    const length = bytesRemaining >= 0x20 ? 0x20 : bytesRemaining;
+    const data = [];
 
-  }
+    for (let i = 0; i < length; i++){
+      data.push(block.data![cursorPosition++]);
+    }
 
-  return serializedIntelHexData;
+    blockRecords += serializeRecord(currentAddress,IntelHexRecordType.Data,data);
+  } while (getBytesRemaining() > 0);
+
+  return blockRecords;
 }
 
 export interface BlockJsonObject{
@@ -102,7 +121,7 @@ export interface BlockJsonObject{
   data: string;
 }
 
-const serializeAsJsonObject = (block:Block,pretty:boolean = false):BlockJsonObject => {
+const serializeAsJsonObject = (block:Block):BlockJsonObject => {
   return {
     address: block.address!,
     data: block.data?.toString('base64') || "no data"

@@ -13,12 +13,15 @@ class IntelHex386 {
     constructor(value) {
         const parseStartTime = Date.now();
         const setTimeToProcess = () => { this.timeToProcess = Date.now() - parseStartTime; };
+        // In instantated with the intelHex386JsonObject
+        // Used when loading a project, rather than loading the .xcal every time
         if (value instanceof Object) {
             this.headerArray = value.headerArray;
             this.blocks = value.blocks.map(b => new Block_1.default(b));
             setTimeToProcess();
             return;
         }
+        // Setup the blocks, the first block and getting the first block
         this.blocks = [
             new Block_1.default()
         ];
@@ -38,14 +41,16 @@ class IntelHex386 {
                 intelHexArray.push(line);
             }
         }
+        // Parse the intel hex records into objects
         const records = intelHexArray.map(r => (0, parseRecord_1.default)(r));
         // Instantiate the blocks by feeding them records
         for (const record of records) {
-            if (!getCurrentBlock().addRecord(record)) {
-                console.log('NEW BLOCK ADDED');
-                this.blocks.push(new Block_1.default());
-                getCurrentBlock().addRecord(record);
+            if (getCurrentBlock().addRecord(record)) {
+                continue;
             }
+            console.log('NEW BLOCK ADDED');
+            this.blocks.push(new Block_1.default());
+            getCurrentBlock().addRecord(record);
         }
         setTimeToProcess();
     }

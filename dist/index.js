@@ -9,5 +9,7 @@ const fs_1 = __importDefault(require("fs"));
 const intelHex386Document = fs_1.default.readFileSync("/Users/navycuda/work/c/cummins_v2/ecm_data/xcal/23701EZ45C_mm/23701EZ45C_mm_V3_23.xcal", 'utf-8');
 const intelHex386 = new IntelHex386_1.default(intelHex386Document);
 const intelHex386Json = JSON.stringify(intelHex386, null, 2);
+const intelHex386File = intelHex386.serialize();
 fs_1.default.writeFileSync("intelHex386.json", intelHex386Json, "utf8");
+fs_1.default.writeFileSync("intelHex386.xcal", intelHex386File, "utf-8");
 console.log('complete');

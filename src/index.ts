@@ -13,6 +13,9 @@ const intelHex386 = new IntelHex386(intelHex386Document);
 
 const intelHex386Json = JSON.stringify(intelHex386,null,2);
 
-fs.writeFileSync("intelHex386.json",intelHex386Json,"utf8")
+const intelHex386File = intelHex386.serialize();
+
+fs.writeFileSync("intelHex386.json",intelHex386Json,"utf8");
+fs.writeFileSync("intelHex386.xcal",intelHex386File,"utf-8");
 
 console.log('complete');

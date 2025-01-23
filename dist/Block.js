@@ -1,8 +1,13 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const parseRecord_1 = require("./tools/parseRecord");
+const serializeRecord_1 = __importDefault(require("./tools/serializeRecord"));
 class Block {
     constructor(blockJsonObject) {
+        this.address = 0 >>> 0;
         if (blockJsonObject) {
             this.address = blockJsonObject.address;
             this.data = Buffer.from(blockJsonObject.data, 'base64');
@@ -18,66 +23,47 @@ class Block {
         // if we find that the record to be added cannot be added to this block
         // we need to return false.  However we also must finish the instantiation
         // of this block.
-        var _a;
-        // On the end of file, return true so that a new block is not instantiated
-        if (record.type === parseRecord_1.IntelHexRecordType.EndOfFile) {
-            // console.log("EndOfFile");
-            return true;
+        // Another, possibily unneeded sanity check
+        if (this.data && !this._tempData) {
+            throw new Error('This block is already complete.  Cannot add new record.');
         }
-        // If the address hasn't been set, this is the first record.
-        if (this.address === undefined) {
-            // If the first record is not an extended linear address the block cannot be properly
-            // instantiated and must throw an error
-            if (record.type !== parseRecord_1.IntelHexRecordType.ExtendedLinearAddress) {
-                console.log("if (record.type !== IntelHexRecordType.ExtendedLinearAddress)", { block: this, record });
-                throw new Error('Tried to instantiate a block without providing an extended linear address first');
-            }
-            this.address = record.getEla();
-            return true;
-        }
-        // If _tempData is still undefined, the address from the first data record must be
-        // added to the block address to set the actual starting address of the block
-        if (!this._tempData) {
-            this.address += record.address;
-            this._tempData = [];
-        }
-        // Setup the working addresses
-        const length = this._tempData.length;
-        const currentAddress = (this.address + length) >>> 0;
-        const recordAbsoluteAddress = (record.getEla() !== null ?
-            record.getEla() :
-            ((this.address & 0xFFFF0000) + record.address) >>> 0);
-        // **** Add a method to check extended linear address
-        // Check to see if the supplied record is sequential with this block
-        // If it isn't, then finalize the instantiation of the block and return false.
-        if (currentAddress !== recordAbsoluteAddress) {
-            console.log("if (currentAddress !== recordAbsoluteAddress)", { block: this, record, currentAddress, recordAbsoluteAddress });
+        // Setup the record for use
+        const { length, address, type, data, getExtendedLinearAddress } = record;
+        const currentAddress = () => this.address + this._tempData.length;
+        const finishBlock = () => {
             this.data = Buffer.from(this._tempData);
             delete this._tempData;
-            return false;
-        }
-        // Deal with the extended linear address
-        if (record.type === parseRecord_1.IntelHexRecordType.ExtendedLinearAddress) {
-            console.log("if (record.type === IntelHexRecordType.ExtendedLinearAddress)", {
-                currentAddress: recordAbsoluteAddress.toString(16),
-                recordAbsoluteAddress: recordAbsoluteAddress.toString(16),
-                ela: (_a = record.getEla()) === null || _a === void 0 ? void 0 : _a.toString(16)
-            });
-            if (recordAbsoluteAddress === currentAddress) {
-                console.log("if (record.getEla() === currentAddress)");
-                this.address += 0x10000;
-                return true;
+        };
+        switch (type) {
+            case parseRecord_1.IntelHexRecordType.Data: {
+                if (this._tempData.length === 0) {
+                    this.address += address;
+                }
+                for (const byte of data) {
+                    this._tempData.push(byte);
+                }
+                break;
             }
-            // return false;
-        }
-        // Add the data to the temporary data storage.
-        if (record.type === parseRecord_1.IntelHexRecordType.Data) {
-            for (const b of record.data) {
-                this._tempData.push(b & 0xFF);
+            case parseRecord_1.IntelHexRecordType.EndOfFile: {
+                finishBlock();
+                break;
+            }
+            case parseRecord_1.IntelHexRecordType.ExtendedLinearAddress: {
+                const ela = getExtendedLinearAddress();
+                // If this is the first pass, initialize the tempData storage
+                if (!this.data && !this._tempData) {
+                    this._tempData = [];
+                    this.address += ela;
+                }
+                if (ela !== currentAddress()) {
+                    finishBlock();
+                    return false;
+                }
+                break;
             }
         }
         return true;
-    }
+    } // AddRecord
     get serializeAs() {
         const block = this;
         return {
@@ -88,17 +74,30 @@ class Block {
 }
 exports.default = Block;
 const serializeAsIntelHex = (block) => {
-    const maximumRecordLength = 32; // The maximum length of the intel hex record
-    let remaining = block.data.length >>> 0;
-    let serializedIntelHexData = '';
-    while (remaining > 0) {
-        // Create the first extended linear address
-        // Create additional extended linear addresses as needed
-        // Add the data records
-    }
-    return serializedIntelHexData;
+    let blockRecords = "";
+    let cursorPosition = 0 >>> 0;
+    const endAddress = (block.address + block.data.length) >>> 0;
+    const getCurrentAddress = () => (block.address + cursorPosition);
+    const getBytesRemaining = () => (endAddress - getCurrentAddress());
+    do {
+        const currentAddress = getCurrentAddress();
+        const bytesRemaining = getBytesRemaining();
+        if (!blockRecords) {
+            blockRecords += (0, serializeRecord_1.default)(currentAddress, parseRecord_1.IntelHexRecordType.ExtendedLinearAddress);
+        }
+        else if (currentAddress % 0x1000 === 0) { // Handle extra linear address setps
+            blockRecords += (0, serializeRecord_1.default)(currentAddress, parseRecord_1.IntelHexRecordType.ExtendedLinearAddress);
+        }
+        const length = bytesRemaining >= 0x20 ? 0x20 : bytesRemaining;
+        const data = [];
+        for (let i = 0; i < length; i++) {
+            data.push(block.data[cursorPosition++]);
+        }
+        blockRecords += (0, serializeRecord_1.default)(currentAddress, parseRecord_1.IntelHexRecordType.Data, data);
+    } while (getBytesRemaining() > 0);
+    return blockRecords;
 };
-const serializeAsJsonObject = (block, pretty = false) => {
+const serializeAsJsonObject = (block) => {
     var _a;
     return {
         address: block.address,

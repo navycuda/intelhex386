@@ -1,10 +1,11 @@
 import { IntelHexRecordObject } from "./parseRecord";
+import { SerializedRecord } from "./serializeRecord";
 
 /** ## calculateCheckSum
  * Least significant byte two's compliment checksum calculation for the intel
  * hex format.
  */
-const calculateCheckSum = (record:IntelHexRecordObject):number => {
+const calculateCheckSum = (record:IntelHexRecordObject|SerializedRecord):number => {
   const values = [
     record.length,
     record.address & 0xFF,
