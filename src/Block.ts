@@ -2,12 +2,13 @@ import { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord";
 
 export default class Block{
   data:undefined|Buffer;
-  address:undefined|number;
+  address:number;
   private _tempData:undefined|number[];
 
   constructor();
   constructor(blockJsonObject:BlockJsonObject);
   constructor(blockJsonObject?:BlockJsonObject){
+    this.address = 0 >>> 0;
     if (blockJsonObject){
       this.address = blockJsonObject.address;
       this.data = Buffer.from(blockJsonObject.data, 'base64');
@@ -26,82 +27,46 @@ export default class Block{
     // of this block.
 
 
-    // On the end of file, return true so that a new block is not instantiated
-    if (record.type === IntelHexRecordType.EndOfFile){
-      // console.log("EndOfFile");
-      return true;
+    // Another, possibily unneeded sanity check
+    if (this.data && !this._tempData){
+      throw new Error('This block is already complete.  Cannot add new record.');
     }
 
-    // If the address hasn't been set, this is the first record.
-    if (this.address === undefined){
-      // If the first record is not an extended linear address the block cannot be properly
-      // instantiated and must throw an error
-      if (record.type !== IntelHexRecordType.ExtendedLinearAddress){
-        console.log("if (record.type !== IntelHexRecordType.ExtendedLinearAddress)", {block:this,record});
-        throw new Error('Tried to instantiate a block without providing an extended linear address first');
+    // Setup the record for use
+    const { length, address, type, data, getExtendedLinearAddress } = record;
+    const currentAddress = () => this.address + this._tempData!.length;
+
+    switch (type){
+      case IntelHexRecordType.Data:{
+        if (this._tempData!.length === 0){
+          this.address! += address;
+        }
+        for (const byte of data){
+          this._tempData!.push(byte);
+        }
+        break;
       }
-      this.address = record.getEla()!;
-      return true;
-    }
-
-    // If _tempData is still undefined, the address from the first data record must be
-    // added to the block address to set the actual starting address of the block
-    if (!this._tempData){
-      this.address += record.address;
-      this._tempData = [];
-    }
-
-    // Setup the working addresses
-    const length = this._tempData.length;
-    const currentAddress = (this.address + length) >>> 0;
-    const recordAbsoluteAddress = (
-      record.getEla() !== null ?
-      record.getEla()! :
-      ((this.address & 0xFFFF0000) + record.address) >>> 0
-    );
-    
-
-
-
-    // **** Add a method to check extended linear address
-
-
-
-
-    // Check to see if the supplied record is sequential with this block
-    // If it isn't, then finalize the instantiation of the block and return false.
-    if (currentAddress !== recordAbsoluteAddress){
-      console.log("if (currentAddress !== recordAbsoluteAddress)", {block:this,record, currentAddress, recordAbsoluteAddress});
-      this.data = Buffer.from(this._tempData as number[]);
-      delete this._tempData;
-      return false;
-    }
-
-    // Deal with the extended linear address
-    if (record.type === IntelHexRecordType.ExtendedLinearAddress){
-      console.log("if (record.type === IntelHexRecordType.ExtendedLinearAddress)",
-        { 
-          currentAddress : recordAbsoluteAddress.toString(16),
-          recordAbsoluteAddress : recordAbsoluteAddress.toString(16),
-          ela: record.getEla()?.toString(16)
-        })
-      if (recordAbsoluteAddress === currentAddress){
-        console.log("if (record.getEla() === currentAddress)");
-        this.address += 0x10000;
-        return true;
+      case IntelHexRecordType.EndOfFile:{
+        break;
       }
-      // return false;
-    }
-
-    // Add the data to the temporary data storage.
-    if (record.type === IntelHexRecordType.Data){
-      for (const b of record.data){
-        this._tempData.push(b & 0xFF);
+      case IntelHexRecordType.ExtendedLinearAddress:{
+        const ela = getExtendedLinearAddress();
+        // If this is the first pass, initialize the tempData storage
+        if (!this.data && !this._tempData){
+          this._tempData = [];
+          this.address += ela!;
+        }
+        if (ela !== currentAddress()) {
+          this.data = Buffer.from(this._tempData!);
+          delete this._tempData;
+          return false;
+        }
+        break;
       }
     }
 
     return true;
-  }
+  } // AddRecord
 
 
 

@@ -6,7 +6,7 @@ export interface IntelHexRecordObject{
   type:IntelHexRecordType;
   data:number[];
   checkSum:number;
-  getEla():number|null;
+  getExtendedLinearAddress():number|null;
 }
 
 export enum IntelHexRecordType{
@@ -50,7 +50,7 @@ const parseRecord = (intelHexRecord:string):IntelHexRecordObject => {
     type,
     data,
     checkSum,
-    getEla(){
+    getExtendedLinearAddress(){
       if (this.type !== IntelHexRecordType.ExtendedLinearAddress) { return null; }
       return ((data[0] << 24) + (data[1] << 16)) >>> 0;
     }
