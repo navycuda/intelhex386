@@ -53,7 +53,7 @@ class IntelHex386 {
             getCurrentBlock().addRecord(record);
         }
         setTimeToProcess();
-    }
+    } // constructor
     serialize() { return serializeAsIntelHex(this); }
     toJSON() { return serializeAsJsonObject(this); }
 }

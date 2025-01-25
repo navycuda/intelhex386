@@ -11,7 +11,7 @@ const calculateCheckSum = (record:IntelHexRecordObject|SerializedRecord):number 
     record.address & 0xFF,
     (record.address >> 8) & 0xFF,
     record.type,
-    ...record.data
+    ...record.data!
   ]
 
 
