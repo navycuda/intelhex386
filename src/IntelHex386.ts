@@ -59,7 +59,7 @@ export default class IntelHex386{
     }
 
     setTimeToProcess();
-  }
+  } // constructor
 
 
   serialize(){ return serializeAsIntelHex(this); }

@@ -27,7 +27,7 @@ const serializeRecord = (address:number,type:IntelHexRecordType,data:number[] = 
   const l = getHexFromUInt(record.length,1);
   const a = getHexFromUInt(record.address,2);
   const t = getHexFromUInt(record.type,1);
-  const d = data.reduce((a,c) => a += getHexFromUInt(c,1),"");
+  const d = record.data!.reduce((a,c) => a += getHexFromUInt(c,1),"");
   const c = getHexFromUInt(record.checksum, 1);
 
   return `:${l}${a}${t}${d}${c}\r\n`;
