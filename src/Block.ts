@@ -16,7 +16,7 @@ export default class Block{
     }
   }
 
-  /** ### Block.addRecord(record)
+  /** ### AddRecord
    * Method to add a record to the block.  Part of the Intel Hex 386 instantiation process.
    * 
    * Returns true as long as the block can accept a new record.  It returns false if the provided
@@ -74,11 +74,28 @@ export default class Block{
     return true;
   } // AddRecord
 
+  /** ## ContainsAddress
+   * Method to check if the block constains an address and if the data
+   * length from that address is within the block.  No read can extend
+   * beyond the end of a memory block
+   */
+  containsAddress(memoryAddress:number,length:number):boolean{
+    const endAddress = (this.address + this.data!.length) >>> 0;
+    const remaining = endAddress - memoryAddress;
+    if (length > remaining) { 
+      throw new Error('Requested Data length exceeds available bytes in block'); 
+    }
+    const hasAddress = this.address <= memoryAddress && endAddress >= memoryAddress;
+    return hasAddress;
+  }
 
-
+  /** ### SerializeAs
+   * Used to manage serialization of the block into JSON, IntelHex or binary
+   */
   get serializeAs() {
     const block = this;
     return {
+      binary():Buffer{ return block.data!; },
       intelHex386(){ return serializeAsIntelHex(block); },
       jsonObject(){ return serializeAsJsonObject(block); }
     }

@@ -1,4 +1,5 @@
 import Block, { BlockJsonObject } from "./Block";
+import Cursor from "./Cursor";
 import parseRecord from "./tools/parseRecord";
 
 
@@ -62,6 +63,20 @@ export default class IntelHex386{
   } // constructor
 
 
+
+
+
+
+
+
+  getCursor(memoryAddress:number,length:number = 1):Cursor{
+    for (const block of this.blocks){
+      if (block.containsAddress(memoryAddress,length)){
+        return new Cursor(block);
+      }
+    }
+    throw new Error('Memory Address not found');
+  }
   serialize(){ return serializeAsIntelHex(this); }
   toJSON(){ return serializeAsJsonObject(this); }
 }
