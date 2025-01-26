@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const Block_1 = __importDefault(require("./Block"));
+const Cursor_1 = __importDefault(require("./Cursor"));
 const parseRecord_1 = __importDefault(require("./tools/parseRecord"));
 /** # Intel Hex 386
  * Instantiates an Intel Hex 386 object for reading and writing
@@ -54,6 +55,14 @@ class IntelHex386 {
         }
         setTimeToProcess();
     } // constructor
+    getCursor(memoryAddress, length = 1) {
+        for (const block of this.blocks) {
+            if (block.containsAddress(memoryAddress, length)) {
+                return new Cursor_1.default(block, memoryAddress);
+            }
+        }
+        throw new Error('Memory Address not found');
+    }
     serialize() { return serializeAsIntelHex(this); }
     toJSON() { return serializeAsJsonObject(this); }
 }

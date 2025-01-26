@@ -23,6 +23,7 @@ export default class Cursor{
   }
 
   read(){
+    console.log('read()',this);
     return this.block.data![this.advanceCursor()];
   }
   readSequentially(length:number){

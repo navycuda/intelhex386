@@ -11,17 +11,25 @@ const intelHex386Document = fs.readFileSync("/Users/navycuda/work/c/cummins_v2/e
 
 
 const intelHex386 = new IntelHex386(intelHex386Document);
-const intelHex386Json = JSON.stringify(intelHex386,null,2);
-const intelHex386File = intelHex386.serialize();
+// const intelHex386Json = JSON.stringify(intelHex386,null,2);
+// const intelHex386File = intelHex386.serialize();
 
 
 
 
 
 
-fs.writeFileSync("intelHex386.json",intelHex386Json,"utf8");
-fs.writeFileSync("intelHex386.xcal",intelHex386File,"utf-8");
+// fs.writeFileSync("intelHex386.json",intelHex386Json,"utf8");
+// fs.writeFileSync("intelHex386.xcal",intelHex386File,"utf-8");
 
+
+
+const indexTableCursor = intelHex386.getCursor(0x8002002C);
+
+
+const packedItns = indexTableCursor.readSequentially(4);
+
+console.log(packedItns);
 
 
 
