@@ -72,7 +72,7 @@ export default class IntelHex386{
   getCursor(memoryAddress:number,length:number = 1):Cursor{
     for (const block of this.blocks){
       if (block.containsAddress(memoryAddress,length)){
-        return new Cursor(block);
+        return new Cursor(block,memoryAddress);
       }
     }
     throw new Error('Memory Address not found');
