@@ -1,6 +1,15 @@
 import { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord";
 import serializeRecord from "./tools/serializeRecord";
 
+export interface BlockDataChangeObject{
+  address: number;
+  data: Buffer;
+}
+export interface BlockJsonObject{
+  address: number;
+  data: string;
+  changes: BlockDataChangeObject[];
+};
 export default class Block{
   data:undefined|Buffer;
   address:number;
@@ -73,7 +82,6 @@ export default class Block{
 
     return true;
   } // AddRecord
-
   /** ## ContainsAddress
    * Method to check if the block constains an address and if the data
    * length from that address is within the block.  No read can extend
@@ -88,7 +96,6 @@ export default class Block{
     const hasAddress = this.address <= memoryAddress && endAddress >= memoryAddress;
     return hasAddress;
   }
-
   /** ### SerializeAs
    * Used to manage serialization of the block into JSON, IntelHex or binary
    */
@@ -131,11 +138,6 @@ const serializeAsIntelHex = (block:Block) => {
   } while (getBytesRemaining() > 0);
 
   return blockRecords;
-}
-
-export interface BlockJsonObject{
-  address: number;
-  data: string;
 }
 
 const serializeAsJsonObject = (block:Block):BlockJsonObject => {

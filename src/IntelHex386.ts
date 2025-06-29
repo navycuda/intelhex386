@@ -2,7 +2,10 @@ import Block, { BlockJsonObject } from "./Block";
 import Cursor from "./Cursor";
 import parseRecord from "./tools/parseRecord";
 
-
+export interface IntelHex386JsonObject{
+  headerArray: string[];
+  blocks: BlockJsonObject[];
+}
 /** # Intel Hex 386
  * Instantiates an Intel Hex 386 object for reading and writing
  * intel hex 386 documents.
@@ -79,6 +82,8 @@ export default class IntelHex386{
   }
   serialize(){ return serializeAsIntelHex(this); }
   toJSON(){ return serializeAsJsonObject(this); }
+
+
 }
 
 const serializeAsIntelHex = (intelHex386:IntelHex386):string => {
@@ -100,10 +105,7 @@ const serializeAsIntelHex = (intelHex386:IntelHex386):string => {
   return serializedIntelHex386;
 }
 
-interface IntelHex386JsonObject{
-  headerArray: string[];
-  blocks: BlockJsonObject[];
-}
+
 
 const serializeAsJsonObject = (intelHex386:IntelHex386,pretty:boolean = false):IntelHex386JsonObject => {
   return {
