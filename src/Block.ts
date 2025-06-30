@@ -1,18 +1,19 @@
+import BlockDataChange, { BlockDataChangeJsonObject } from "./BlockDataChange";
 import { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord";
 import serializeRecord from "./tools/serializeRecord";
 
-export interface BlockDataChangeObject{
-  address: number;
-  data: Buffer;
-}
 export interface BlockJsonObject{
   address: number;
   data: string;
-  changes: BlockDataChangeObject[];
+  changes: BlockDataChangeJsonObject[];
 };
 export default class Block{
   data:undefined|Buffer;
+  /** ## address
+   * The starting memory address of this block
+   */
   address:number;
+  changes: BlockDataChange[];
   private _tempData:undefined|number[];
 
   constructor();
@@ -22,6 +23,9 @@ export default class Block{
     if (blockJsonObject){
       this.address = blockJsonObject.address;
       this.data = Buffer.from(blockJsonObject.data, 'base64');
+      this.changes = blockJsonObject.changes.map(c => new BlockDataChange(c));
+    } else {
+      this.changes = [];
     }
   }
 
@@ -102,7 +106,19 @@ export default class Block{
   get serializeAs() {
     const block = this;
     return {
-      binary():Buffer{ return block.data!; },
+      binary():Buffer{
+        // if there are no changes for this block then don't run it.
+        if (block.changes.length === 0) {
+          return block.data!;
+        }
+        const buffer = Buffer.from(block.data!);
+
+        for (const change of block.changes){
+          change.writeTo(block,buffer);
+        }
+
+        return buffer; 
+      },
       intelHex386(){ return serializeAsIntelHex(block); },
       jsonObject(){ return serializeAsJsonObject(block); }
     }
@@ -110,9 +126,10 @@ export default class Block{
 }
 
 const serializeAsIntelHex = (block:Block) => {
+  const buffer = block.serializeAs.binary();
   let blockRecords = "";
   let cursorPosition = 0 >>> 0;
-  const endAddress = (block.address + block.data!.length) >>> 0;
+  const endAddress = (block.address + buffer.length) >>> 0;
 
   const getCurrentAddress = () => (block.address + cursorPosition);
   const getBytesRemaining = () => (endAddress - getCurrentAddress());
@@ -131,7 +148,7 @@ const serializeAsIntelHex = (block:Block) => {
     const data = [];
 
     for (let i = 0; i < length; i++){
-      data.push(block.data![cursorPosition++]);
+      data.push(buffer[cursorPosition++]);
     }
 
     blockRecords += serializeRecord(currentAddress,IntelHexRecordType.Data,data);
@@ -143,6 +160,7 @@ const serializeAsIntelHex = (block:Block) => {
 const serializeAsJsonObject = (block:Block):BlockJsonObject => {
   return {
     address: block.address!,
-    data: block.data?.toString('base64') || "no data"
+    data: block.data?.toString('base64') || "no data",
+    changes: block.changes.map((c) => c.serializeAs.jsonObject())
   };
 }
