@@ -69,11 +69,12 @@ export default class BlockDataChange{
 
 
   static from<T extends keyof BlockDataType>(
+    address:number,
     type: T,
     endianness: Endianness,
     ...params: Tuple<BlockDataType[T]>
   ){
-    if (Array.isArray(params[0]){
+    if (Array.isArray(params[0])){
       // Handle if it's an array of values
     } else {
       // It's one value, how fricken hard can this be?
@@ -95,5 +96,9 @@ export default class BlockDataChange{
         break;
       }
     }
+
+
+    // TODO: REAL RETURN VALUE!!!
+    return new BlockDataChange(address,Buffer.from([ 0 ]))
   }
 }

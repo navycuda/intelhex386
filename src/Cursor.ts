@@ -30,6 +30,9 @@ export default class Cursor{
     return Buffer.from(Array.from({length}, this.read));
   }
 
+
+  // MAJOR REFACTOR NEEDED TO INCLUDE BLOCK DATA CHANGE
+  // AKA CHANGE AUDITING.
   write(byte:number){
     this.block.data![this.advanceCursor()] = byte & 0xFF;
   }
