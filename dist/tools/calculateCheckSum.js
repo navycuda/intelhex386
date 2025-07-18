@@ -1,5 +1,3 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
 /** ## calculateCheckSum
  * Least significant byte two's compliment checksum calculation for the intel
  * hex format.
@@ -15,4 +13,4 @@ const calculateCheckSum = (record) => {
     const sum = values.reduce((a, c) => (a + c), 0);
     return ((~sum + 1) & 0xFF);
 };
-exports.default = calculateCheckSum;
+export default calculateCheckSum;

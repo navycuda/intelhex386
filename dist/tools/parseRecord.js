@@ -1,16 +1,10 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.IntelHexRecordType = void 0;
-const calculateCheckSum_1 = __importDefault(require("./calculateCheckSum"));
-var IntelHexRecordType;
+import calculateCheckSum from "./calculateCheckSum.js";
+export var IntelHexRecordType;
 (function (IntelHexRecordType) {
     IntelHexRecordType[IntelHexRecordType["Data"] = 0] = "Data";
     IntelHexRecordType[IntelHexRecordType["EndOfFile"] = 1] = "EndOfFile";
     IntelHexRecordType[IntelHexRecordType["ExtendedLinearAddress"] = 4] = "ExtendedLinearAddress";
-})(IntelHexRecordType || (exports.IntelHexRecordType = IntelHexRecordType = {}));
+})(IntelHexRecordType || (IntelHexRecordType = {}));
 /** ## parseRecord
  * Takes the intel hex record and parses it into an object for use in the program
  *
@@ -51,9 +45,9 @@ const parseRecord = (intelHexRecord) => {
             return ((data[0] << 24) + (data[1] << 16)) >>> 0;
         }
     };
-    if ((0, calculateCheckSum_1.default)(record) !== checkSum) {
+    if (calculateCheckSum(record) !== checkSum) {
         throw new Error(`Bad Checksum ==> , ${intelHexRecord}`);
     }
     return record;
 };
-exports.default = parseRecord;
+export default parseRecord;

@@ -1,4 +1,4 @@
-import calculateCheckSum from "./calculateCheckSum";
+import calculateCheckSum from "./calculateCheckSum.js";
 
 export interface IntelHexRecordObject{
   length:number;

@@ -1,83 +1,69 @@
-import BlockDataChange, { BlockDataChangeJsonObject } from "./BlockDataChange";
-import { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord";
-import serializeRecord from "./tools/serializeRecord";
+import { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord.js";
 
-export interface BlockJsonObject{
-  address: number;
-  data: string;
-  changes: BlockDataChangeJsonObject[];
-};
-export default class Block{
-  data:undefined|Buffer;
-  /** ## address
-   * The starting memory address of this block
-   */
-  address:number;
-  changes: BlockDataChange[];
-  private _tempData:undefined|number[];
+export interface BlockToJSON {
+  _address: string;
+  _buffer: string;
+}
+
+export class Block {
+  private _address: number = 0;
+  private _tempArray: number[] | undefined = [];
+  private _buffer: Buffer | undefined;
+
+
+  get length(): number {
+    return (this._tempArray
+      ? this._tempArray.length
+      : this._buffer!.length
+    );
+  }
 
   constructor();
-  constructor(blockJsonObject:BlockJsonObject);
-  constructor(blockJsonObject?:BlockJsonObject){
-    this.address = 0 >>> 0;
-    if (blockJsonObject){
-      this.address = blockJsonObject.address;
-      this.data = Buffer.from(blockJsonObject.data, 'base64');
-      this.changes = blockJsonObject.changes.map(c => new BlockDataChange(c));
-    } else {
-      this.changes = [];
+  constructor(blockJson: BlockToJSON);
+  constructor(blockJson?: BlockToJSON) {
+    if (blockJson) {
+      this._address = parseInt(blockJson._address, 16) >>> 0;
+      this._buffer = Buffer.from(blockJson._buffer, 'base64');
+
+      delete this._tempArray;
     }
   }
 
-  /** ### AddRecord
-   * Method to add a record to the block.  Part of the Intel Hex 386 instantiation process.
-   * 
-   * Returns true as long as the block can accept a new record.  It returns false if the provided
-   * record cannot be added sequentially to the block.
-   */
-  addRecord(record:IntelHexRecordObject):boolean{
-    // if we find that the record to be added cannot be added to this block
-    // we need to return false.  However we also must finish the instantiation
-    // of this block.
 
 
-    // Another, possibily unneeded sanity check
-    if (this.data && !this._tempData){
-      throw new Error('This block is already complete.  Cannot add new record.');
-    }
+  private _buildBuffer(): void {
+    this._buffer = Buffer.from(this._tempArray!);
+    delete this._tempArray;
+  }
+  private _hasAddress(address:number):boolean{
+    return address >= this._address && address <= (this._address + this.length);
+  }
 
-    // Setup the record for use
-    const { length, address, type, data, getExtendedLinearAddress } = record;
-    const currentAddress = () => this.address + this._tempData!.length;
 
-    const finishBlock = () => {
-      this.data = Buffer.from(this._tempData!);
-      delete this._tempData;
-    }
+  addRecord(record: IntelHexRecordObject): boolean {
+    const { address, type, data } = record;
+    const currentAddress = () => this._address + this._tempArray!.length;
 
-    switch (type){
-      case IntelHexRecordType.Data:{
-        if (this._tempData!.length === 0){
-          this.address! += address;
+
+    switch (type) {
+      case IntelHexRecordType.Data: {
+        if (this._tempArray!.length === 0) {
+          this._address += address;
         }
-        for (const byte of data){
-          this._tempData!.push(byte);
-        }
+        this._tempArray!.push(...data);
         break;
       }
-      case IntelHexRecordType.EndOfFile:{
-        finishBlock();
+      case IntelHexRecordType.EndOfFile: {
+        this._buildBuffer();
         break;
       }
-      case IntelHexRecordType.ExtendedLinearAddress:{
-        const ela = getExtendedLinearAddress();
-        // If this is the first pass, initialize the tempData storage
-        if (!this.data && !this._tempData){
-          this._tempData = [];
-          this.address += ela!;
+      case IntelHexRecordType.ExtendedLinearAddress: {
+        const ela = record.getExtendedLinearAddress()!;
+        if (this.length === 0) {
+          this._address += ela;
         }
         if (ela !== currentAddress()) {
-          finishBlock();
+          this._buildBuffer();
           return false;
         }
         break;
@@ -85,82 +71,39 @@ export default class Block{
     }
 
     return true;
-  } // AddRecord
-  /** ## ContainsAddress
-   * Method to check if the block constains an address and if the data
-   * length from that address is within the block.  No read can extend
-   * beyond the end of a memory block
-   */
-  containsAddress(memoryAddress:number,length:number):boolean{
-    const endAddress = (this.address + this.data!.length) >>> 0;
-    const remaining = endAddress - memoryAddress;
-    if (length > remaining) { 
-      throw new Error('Requested Data length exceeds available bytes in block'); 
-    }
-    const hasAddress = this.address <= memoryAddress && endAddress >= memoryAddress;
-    return hasAddress;
   }
-  /** ### SerializeAs
-   * Used to manage serialization of the block into JSON, IntelHex or binary
-   */
-  get serializeAs() {
-    const block = this;
+
+
+
+
+
+  read(address:number,length:number):Buffer|null{
+    if (!this._hasAddress) { return null; }
+    const start = address - this._address;
+    const end = start + length;
+    if (end > (this._address + this.length)) {
+      throw new Error('Block - Read length exceeds size of buffer');
+    }
+    return this._buffer!.subarray(start,end);
+  }
+
+  write(address:number, buffer:Buffer):boolean{
+    if (!this._hasAddress) { return false; }
+    const start = address - this._address;
+    const end = start + buffer.length;
+    if (end > (this._address + this.length)) {
+      throw new Error('Block - Read length exceeds size of buffer');
+    }
+
+    buffer.copy(this._buffer!, start);
+    return true;
+  }
+
+  private toJSON(): BlockToJSON {
     return {
-      binary():Buffer{
-        // if there are no changes for this block then don't run it.
-        if (block.changes.length === 0) {
-          return block.data!;
-        }
-        const buffer = Buffer.from(block.data!);
-
-        for (const change of block.changes){
-          change.writeTo(block,buffer);
-        }
-
-        return buffer; 
-      },
-      intelHex386(){ return serializeAsIntelHex(block); },
-      jsonObject(){ return serializeAsJsonObject(block); }
-    }
+      _address: this._address.toString(16).padStart(8, "0"),
+      _buffer: this._buffer!.toString('base64')
+    };
   }
 }
 
-const serializeAsIntelHex = (block:Block) => {
-  const buffer = block.serializeAs.binary();
-  let blockRecords = "";
-  let cursorPosition = 0 >>> 0;
-  const endAddress = (block.address + buffer.length) >>> 0;
-
-  const getCurrentAddress = () => (block.address + cursorPosition);
-  const getBytesRemaining = () => (endAddress - getCurrentAddress());
-
-  do {
-    const currentAddress = getCurrentAddress();
-    const bytesRemaining = getBytesRemaining();
-
-    if (!blockRecords){
-      blockRecords += serializeRecord(currentAddress,IntelHexRecordType.ExtendedLinearAddress);
-    } else if (currentAddress % 0x1000 === 0){ // Handle extra linear address setps
-      blockRecords += serializeRecord(currentAddress,IntelHexRecordType.ExtendedLinearAddress);
-    }
-
-    const length = bytesRemaining >= 0x20 ? 0x20 : bytesRemaining;
-    const data = [];
-
-    for (let i = 0; i < length; i++){
-      data.push(buffer[cursorPosition++]);
-    }
-
-    blockRecords += serializeRecord(currentAddress,IntelHexRecordType.Data,data);
-  } while (getBytesRemaining() > 0);
-
-  return blockRecords;
-}
-
-const serializeAsJsonObject = (block:Block):BlockJsonObject => {
-  return {
-    address: block.address!,
-    data: block.data?.toString('base64') || "no data",
-    changes: block.changes.map((c) => c.serializeAs.jsonObject())
-  };
-}

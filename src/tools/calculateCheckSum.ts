@@ -1,5 +1,5 @@
-import { IntelHexRecordObject } from "./parseRecord";
-import { SerializedRecord } from "./serializeRecord";
+import { IntelHexRecordObject } from "./parseRecord.js";
+import { SerializedRecord } from "./serializeRecord.js";
 
 /** ## calculateCheckSum
  * Least significant byte two's compliment checksum calculation for the intel

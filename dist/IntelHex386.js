@@ -1,89 +1,66 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const Block_1 = __importDefault(require("./Block"));
-const Cursor_1 = __importDefault(require("./Cursor"));
-const parseRecord_1 = __importDefault(require("./tools/parseRecord"));
-/** # Intel Hex 386
- * Instantiates an Intel Hex 386 object for reading and writing
- * intel hex 386 documents.
- */
-class IntelHex386 {
-    constructor(value) {
-        const parseStartTime = Date.now();
-        const setTimeToProcess = () => { this.timeToProcess = Date.now() - parseStartTime; };
-        // In instantated with the intelHex386JsonObject
-        // Used when loading a project, rather than loading the .xcal every time
-        if (value instanceof Object) {
-            this.headerArray = value.headerArray;
-            this.blocks = value.blocks.map(b => new Block_1.default(b));
-            setTimeToProcess();
-            return;
+import { Block } from "./Block.js";
+import parseRecord, { IntelHexRecordType } from "./tools/parseRecord.js";
+export default class IntelHex386 {
+    _header = [];
+    _blocks = [new Block()];
+    constructor(intelHex386) {
+        if (typeof intelHex386 === 'object') {
+            this._header = intelHex386._header;
+            this._blocks = intelHex386._blocks.map(b => new Block(b));
         }
-        // Setup the blocks, the first block and getting the first block
-        this.blocks = [
-            new Block_1.default()
-        ];
-        const getCurrentBlock = () => this.blocks[this.blocks.length - 1];
-        // Remove carriage returns and split the document into an array of strings
-        // at the new line characters.
-        const intelHex386Lines = value.replace(/\r/g, '').split(/\n/);
-        // Prepare the storage areas
-        this.headerArray = [];
-        const intelHexArray = [];
-        // Sort out the file header items and the intel hex records
-        for (const line of intelHex386Lines) {
-            if (line[0] !== ":" && intelHexArray.length === 0) {
-                this.headerArray.push(line);
+        else {
+            const intelHex386Lines = intelHex386.split(/\r?\n/g);
+            const records = [];
+            for (const line of intelHex386Lines) {
+                if (line[0] === ":") {
+                    records.push(parseRecord(line));
+                }
+                else {
+                    this._header.push(line);
+                }
             }
-            if (line[0] === ":") {
-                intelHexArray.push(line);
+            const getCurrentBlock = () => this._blocks[this._blocks.length - 1];
+            const addBlock = (record) => {
+                this._blocks.push(new Block());
+                getCurrentBlock().addRecord(record);
+            };
+            for (const record of records) {
+                const addRecord = getCurrentBlock().addRecord(record);
+                if (!addRecord && record.type !== IntelHexRecordType.EndOfFile) {
+                    addBlock(record);
+                }
             }
         }
-        // Parse the intel hex records into objects
-        const records = intelHexArray.map(r => (0, parseRecord_1.default)(r));
-        // Instantiate the blocks by feeding them records
-        for (const record of records) {
-            if (getCurrentBlock().addRecord(record)) {
-                continue;
-            }
-            console.log('NEW BLOCK ADDED');
-            this.blocks.push(new Block_1.default());
-            getCurrentBlock().addRecord(record);
-        }
-        setTimeToProcess();
-    } // constructor
-    getCursor(memoryAddress, length = 1) {
-        for (const block of this.blocks) {
-            if (block.containsAddress(memoryAddress, length)) {
-                return new Cursor_1.default(block, memoryAddress);
-            }
-        }
-        throw new Error('Memory Address not found');
     }
-    serialize() { return serializeAsIntelHex(this); }
-    toJSON() { return serializeAsJsonObject(this); }
+    ;
+    read(address, length) {
+        if (typeof address === "string") {
+            address = parseInt(address, 16);
+        }
+        for (const block of this._blocks) {
+            const buffer = block.read(address, length);
+            if (buffer) {
+                return buffer;
+            }
+        }
+        throw new Error('IntelHex386.read - address or length not appropriate');
+    }
+    write(address, buffer) {
+        if (typeof address === "string") {
+            address = parseInt(address, 16);
+        }
+        for (const block of this._blocks) {
+            const result = block.write(address, buffer);
+            if (result) {
+                return result;
+            }
+        }
+        throw new Error('IntelHex386.write - address or length not appropriate');
+    }
+    toJSON() {
+        return {
+            _header: this._header,
+            _blocks: this._blocks
+        };
+    }
 }
-exports.default = IntelHex386;
-const serializeAsIntelHex = (intelHex386) => {
-    let serializedIntelHex386 = '';
-    // Add header array
-    for (const header of intelHex386.headerArray) {
-        serializedIntelHex386 += header + '\r\n';
-    }
-    // Add blocks
-    for (const block of intelHex386.blocks) {
-        serializedIntelHex386 += block.serializeAs.intelHex386();
-    }
-    // add the end of file record
-    serializedIntelHex386 += ':00000001FF';
-    return serializedIntelHex386;
-};
-const serializeAsJsonObject = (intelHex386, pretty = false) => {
-    return {
-        headerArray: intelHex386.headerArray,
-        blocks: intelHex386.blocks.map(b => b.serializeAs.jsonObject())
-    };
-};
