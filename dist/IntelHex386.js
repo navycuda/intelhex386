@@ -57,6 +57,25 @@ export default class IntelHex386 {
         }
         throw new Error('IntelHex386.write - address or length not appropriate');
     }
+    findInBlocks(callback) {
+        for (let b = 0; b < this._blocks.length; b++) {
+            const result = callback(this._blocks[b].buffer);
+            if (result) {
+                return {
+                    index: b,
+                    address: this._blocks[b].address,
+                    result
+                };
+            }
+        }
+        return null;
+    }
+    toIntelHex386Document() {
+        return '';
+    }
+    toBinary() {
+        return Buffer.from([0, 0, 0, 0]);
+    }
     toJSON() {
         return {
             _header: this._header,

@@ -1,5 +1,5 @@
-import calculateCheckSum from "./calculateCheckSum";
-import { IntelHexRecordType } from "./parseRecord";
+import calculateCheckSum from "./calculateCheckSum.js";
+import { IntelHexRecordType } from "./parseRecord.js";
 const serializeRecord = (address, type, data = []) => {
     const record = {
         length: type === IntelHexRecordType.ExtendedLinearAddress ? 2 : data.length,

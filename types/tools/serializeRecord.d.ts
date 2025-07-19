@@ -1,4 +1,4 @@
-import { IntelHexRecordType } from "./parseRecord";
+import { IntelHexRecordType } from "./parseRecord.js";
 export interface SerializedRecord {
     length: number;
     address: number;

@@ -8,6 +8,13 @@ export interface IntelHex386ToJSON{
   _blocks: BlockToJSON[];
 }
 
+export interface FindInBlocksResult<T>{
+  index: number;    // block index
+  address: number;  // starting address of the block
+  result: T         // result from the callback
+}
+
+
 export default class IntelHex386{
   private _header:string[] = [];
   private _blocks:Block[] = [ new Block() ];
@@ -69,6 +76,30 @@ export default class IntelHex386{
       if (result) { return result; }
     }
     throw new Error('IntelHex386.write - address or length not appropriate');
+  }
+
+
+
+  findInBlocks<T>(callback: (buffer:Buffer) => (T | null)): FindInBlocksResult<T> | null {
+    for (let b = 0; b < this._blocks.length; b++){
+      const result = callback(this._blocks[b].buffer);
+      if (result) { 
+        return {
+          index: b,
+          address: this._blocks[b].address,
+          result
+        }; 
+      }
+    }
+    return null;
+  }
+
+
+  toIntelHex386Document():string{
+    return '';
+  }
+  toBinary():Buffer{
+    return Buffer.from([ 0, 0, 0 ,0 ]);
   }
 
 

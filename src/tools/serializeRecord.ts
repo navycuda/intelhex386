@@ -1,5 +1,5 @@
-import calculateCheckSum from "./calculateCheckSum";
-import { IntelHexRecordType } from "./parseRecord";
+import calculateCheckSum from "./calculateCheckSum.js";
+import { IntelHexRecordType } from "./parseRecord.js";
 
 export interface SerializedRecord{
   length:number;

@@ -18,6 +18,13 @@ export class Block {
     );
   }
 
+  get buffer():Buffer{
+    return this._buffer!;
+  }
+  get address():number{
+    return this._address;
+  }
+
   constructor();
   constructor(blockJson: BlockToJSON);
   constructor(blockJson?: BlockToJSON) {
@@ -98,6 +105,8 @@ export class Block {
     buffer.copy(this._buffer!, start);
     return true;
   }
+
+  
 
   private toJSON(): BlockToJSON {
     return {

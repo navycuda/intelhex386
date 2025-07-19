@@ -1,1 +1,1 @@
-export * from './IntelHex386.js';
+export {default as IntelHex386} from "./IntelHex386.js";

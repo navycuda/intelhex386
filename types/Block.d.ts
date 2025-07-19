@@ -8,6 +8,8 @@ export declare class Block {
     private _tempArray;
     private _buffer;
     get length(): number;
+    get buffer(): Buffer;
+    get address(): number;
     constructor();
     constructor(blockJson: BlockToJSON);
     private _buildBuffer;

@@ -8,6 +8,12 @@ export class Block {
             ? this._tempArray.length
             : this._buffer.length);
     }
+    get buffer() {
+        return this._buffer;
+    }
+    get address() {
+        return this._address;
+    }
     constructor(blockJson) {
         if (blockJson) {
             this._address = parseInt(blockJson._address, 16) >>> 0;
