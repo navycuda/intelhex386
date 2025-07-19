@@ -1,4 +1,5 @@
 import { Block } from "./Block.js";
+import getRecordString from "./tools/getRecordString.js";
 import parseRecord, { IntelHexRecordType } from "./tools/parseRecord.js";
 export default class IntelHex386 {
     _header = [];
@@ -57,6 +58,15 @@ export default class IntelHex386 {
         }
         throw new Error('IntelHex386.write - address or length not appropriate');
     }
+    /** ## findAbsoluteAddress
+     * Method to search for the absolute address from a block index
+     * and byte index.
+     *
+     * Used to get the address from certain
+     */
+    findAbsoluteAddress(blockIndex, byteIndex) {
+        return this._blocks[blockIndex].getAbsoluteAddressFromIndex(byteIndex);
+    }
     findInBlocks(callback) {
         for (let b = 0; b < this._blocks.length; b++) {
             const result = callback(this._blocks[b].buffer);
@@ -71,10 +81,15 @@ export default class IntelHex386 {
         return null;
     }
     toIntelHex386Document() {
-        return '';
+        let intelHex386Document = this._header.join('\r\n');
+        for (const block of this._blocks) {
+            intelHex386Document += block.getAsIntelHex386ExtendedLinearAddressBlock();
+        }
+        intelHex386Document += getRecordString(0, IntelHexRecordType.EndOfFile);
+        return intelHex386Document;
     }
     toBinary() {
-        return Buffer.from([0, 0, 0, 0]);
+        return Buffer.concat(this._blocks.map(b => b.buffer));
     }
     toJSON() {
         return {

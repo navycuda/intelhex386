@@ -1,0 +1,2 @@
+const getRecordString;
+export {};

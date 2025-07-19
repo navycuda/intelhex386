@@ -1,3 +1,4 @@
+import getRecordString from "./tools/getRecordString.js";
 import { IntelHexRecordType } from "./tools/parseRecord.js";
 export class Block {
     _address = 0;
@@ -27,6 +28,36 @@ export class Block {
     }
     _hasAddress(address) {
         return address >= this._address && address <= (this._address + this.length);
+    }
+    getAbsoluteAddressFromIndex(byteIndex) {
+        return byteIndex + this._address;
+    }
+    getAsIntelHex386ExtendedLinearAddressBlock() {
+        if (!this._buffer) {
+            throw new Error("Buffer is missing from block, cannot create intelhex386 document");
+        }
+        let intelHex386Document = '';
+        let cursorPosition = 0 >>> 0;
+        const getCurrentAddress = () => (this._address + cursorPosition);
+        const getBytesRemaining = () => ((this._address + this.length) - getCurrentAddress());
+        let firstPass = true;
+        do {
+            const currentAddress = getCurrentAddress();
+            const bytesRemaining = getBytesRemaining();
+            if (firstPass) {
+                intelHex386Document += getRecordString(currentAddress, IntelHexRecordType.ExtendedLinearAddress);
+                firstPass = false;
+            }
+            else if (currentAddress % 0x10000 === 0) {
+                intelHex386Document += getRecordString(currentAddress, IntelHexRecordType.ExtendedLinearAddress);
+            }
+            const length = bytesRemaining >= 0x20 ? 0x20 : bytesRemaining;
+            const data = [];
+            for (let d = 0; d < length; d++) {
+                data.push(this._buffer[cursorPosition++]);
+            }
+        } while (getBytesRemaining() > 0);
+        return intelHex386Document;
     }
     addRecord(record) {
         const { address, type, data } = record;

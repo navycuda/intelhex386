@@ -25,7 +25,8 @@
   },
   "contributors": [],
   "scripts": {
-    "dev": "tsc && node dist/index.js",
+    "start": "tsc && node dist/index.js",
+    "dev": "tsc --watch",
     "test": ""
   },
   "devDependencies": {

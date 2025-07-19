@@ -14,6 +14,8 @@ export declare class Block {
     constructor(blockJson: BlockToJSON);
     private _buildBuffer;
     private _hasAddress;
+    getAbsoluteAddressFromIndex(byteIndex: number): number;
+    getAsIntelHex386ExtendedLinearAddressBlock(): string;
     addRecord(record: IntelHexRecordObject): boolean;
     read(address: number, length: number): Buffer | null;
     write(address: number, buffer: Buffer): boolean;

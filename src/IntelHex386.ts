@@ -1,4 +1,5 @@
 import { Block, BlockToJSON } from "./Block.js";
+import getRecordString from "./tools/getRecordString.js";
 import parseRecord, { IntelHexRecordObject, IntelHexRecordType } from "./tools/parseRecord.js";
 
 
@@ -9,9 +10,12 @@ export interface IntelHex386ToJSON{
 }
 
 export interface FindInBlocksResult<T>{
-  index: number;    // block index
-  address: number;  // starting address of the block
-  result: T         // result from the callback
+  /** the block index */
+  index: number;
+  /** starting address of the block */
+  address: number;
+  /** the result of the callback */
+  result: T;
 }
 
 
@@ -24,12 +28,9 @@ export default class IntelHex386{
   constructor(intelHex386Json:IntelHex386ToJSON);
   constructor(intelHex386:IntelHex386ToJSON|string){
     if (typeof intelHex386 === 'object'){
-
       this._header = intelHex386._header;
       this._blocks = intelHex386._blocks.map(b => new Block(b));
-
     } else {
-      
       const intelHex386Lines = intelHex386.split(/\r?\n/g);
       const records = [];
   
@@ -79,6 +80,16 @@ export default class IntelHex386{
   }
 
 
+  /** ## findAbsoluteAddress
+   * Method to search for the absolute address from a block index
+   * and byte index.
+   * 
+   * Used to get the address from certain 
+   */
+  findAbsoluteAddress(blockIndex:number,byteIndex:number):number{
+    return this._blocks[blockIndex].getAbsoluteAddressFromIndex(byteIndex);
+  }
+
 
   findInBlocks<T>(callback: (buffer:Buffer) => (T | null)): FindInBlocksResult<T> | null {
     for (let b = 0; b < this._blocks.length; b++){
@@ -96,10 +107,18 @@ export default class IntelHex386{
 
 
   toIntelHex386Document():string{
-    return '';
+    let intelHex386Document = this._header.join('\r\n');
+
+    for (const block of this._blocks){
+      intelHex386Document += block.getAsIntelHex386ExtendedLinearAddressBlock();
+    }
+
+    intelHex386Document += getRecordString(0,IntelHexRecordType.EndOfFile);
+
+    return intelHex386Document;
   }
   toBinary():Buffer{
-    return Buffer.from([ 0, 0, 0 ,0 ]);
+    return Buffer.concat(this._blocks.map(b => b.buffer));
   }
 
 
