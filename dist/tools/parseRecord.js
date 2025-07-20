@@ -1,24 +1,32 @@
 import calculateCheckSum from "./calculateCheckSum.js";
+/**
+ * Enumeration of Intel HEX record types.
+ */
 export var IntelHexRecordType;
 (function (IntelHexRecordType) {
+    /** Data record. */
     IntelHexRecordType[IntelHexRecordType["Data"] = 0] = "Data";
+    /** End of File record. */
     IntelHexRecordType[IntelHexRecordType["EndOfFile"] = 1] = "EndOfFile";
+    /** Extended Linear Address record. */
     IntelHexRecordType[IntelHexRecordType["ExtendedLinearAddress"] = 4] = "ExtendedLinearAddress";
 })(IntelHexRecordType || (IntelHexRecordType = {}));
-/** ## parseRecord
- * Takes the intel hex record and parses it into an object for use in the program
+/**
+ * Parses an Intel HEX record string into an object.
  *
+ * @param intelHexRecord - The Intel HEX record string to parse.
+ * @returns An `IntelHexRecordObject` representing the parsed record.
  * @example
- * :020000040800F2
- * |||||||||||||^^  CheckSum
- * |||||||||^^^^--  Data
- * |||||||^^------  Record Type
- * |||||||            0x00 - Data
- * |||||||            0x01 - End Of File
- * |||||||            0x04 - Extended Linear Address
- * |||^^^^--------  16-bit Address
- * |^^------------  Length
- * ^--------------  Intel Hex Record prefix
+ * // :020000040800F2
+ * // |||||||||||||^^  CheckSum
+ * // |||||||||^^^^--  Data
+ * // |||||||^^------  Record Type
+ * // |||||||            0x00 - Data
+ * // |||||||            0x01 - End Of File
+ * // |||||||            0x04 - Extended Linear Address
+ * // |||^^^^--------  16-bit Address
+ * // |^^------------  Length
+ * // ^--------------  Intel Hex Record prefix
  */
 const parseRecord = (intelHexRecord) => {
     const hexLength = intelHexRecord.substring(1, 3);

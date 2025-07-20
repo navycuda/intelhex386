@@ -116,11 +116,11 @@ export class Block {
 
       const length = bytesRemaining >= 0x20 ? 0x20 : bytesRemaining;
       const data = [];
-
       for (let d = 0; d < length; d++){
         data.push(this._buffer[cursorPosition++]);
       }
 
+      intelHex386Document += getRecordString(currentAddress,IntelHexRecordType.Data,data);
     } while (getBytesRemaining() > 0)
       
   

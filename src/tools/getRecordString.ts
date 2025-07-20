@@ -46,7 +46,7 @@ interface GetRecordString{
  * @returns The formatted Intel HEX record string.
  */
 const getRecordString:GetRecordString = (address,type,data?:number[]):string => {
-  if (type === IntelHexRecordType.EndOfFile) { return ":00000001FF"; }
+  if (type === IntelHexRecordType.EndOfFile) { return ":00000001FF\r\n"; }
   
   const isEla = type === IntelHexRecordType.ExtendedLinearAddress;
 

@@ -1,9 +1,16 @@
 import calculateCheckSum from "./calculateCheckSum.js";
 import convert from "./convert.js";
 import { IntelHexRecordType } from "./parseRecord.js";
+/**
+ * Generates an Intel HEX record string from the given parameters.
+ * @param address - The address for the record.
+ * @param type - The type of the record.
+   * @param data - The data for the record (for Data records).
+ * @returns The formatted Intel HEX record string.
+ */
 const getRecordString = (address, type, data) => {
     if (type === IntelHexRecordType.EndOfFile) {
-        return ":00000001FF";
+        return ":00000001FF\r\n";
     }
     const isEla = type === IntelHexRecordType.ExtendedLinearAddress;
     const record = {

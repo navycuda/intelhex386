@@ -1,5 +1,12 @@
 import calculateCheckSum from "./calculateCheckSum.js";
 import { IntelHexRecordType } from "./parseRecord.js";
+/**
+ * Serializes an Intel HEX record into a string.
+ * @param address - The address for the record.
+ * @param type - The type of the record.
+ * @param data - The data for the record.
+ * @returns The serialized Intel HEX record string.
+ */
 const serializeRecord = (address, type, data = []) => {
     const record = {
         length: type === IntelHexRecordType.ExtendedLinearAddress ? 2 : data.length,
@@ -22,6 +29,12 @@ const serializeRecord = (address, type, data = []) => {
     return `:${l}${a}${t}${d}${c}\r\n`;
 };
 export default serializeRecord;
+/**
+ * Converts an unsigned integer to a hexadecimal string.
+ * @param value - The value to convert.
+ * @param length - The desired length of the hexadecimal string in bytes.
+ * @returns The hexadecimal string.
+ */
 const getHexFromUInt = (value, length) => {
     const bits = length * 2;
     return value.toString(16).padStart(bits, '0').toUpperCase();
