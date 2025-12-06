@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - direct header array access
 
+## [1.0.1] - 2025-12-05
+
+### Cosmetic
+- Improve some of the documentation, make some returns more explicit
+
 ## [1.0.0] - 2025-07-19
 
 ### Added

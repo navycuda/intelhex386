@@ -93,7 +93,7 @@ export class Block {
    * Converts the block to an Intel HEX 386 Extended Linear Address block format.
    * @returns The Intel HEX string representation of the block.
    */
-  getAsIntelHex386ExtendedLinearAddressBlock(){
+  getAsIntelHex386ExtendedLinearAddressBlock():string{
     if (!this._buffer) { throw new Error ("Buffer is missing from block, cannot create intelhex386 document"); }
     let intelHex386Document = '';
     let cursorPosition = 0 >>> 0;
