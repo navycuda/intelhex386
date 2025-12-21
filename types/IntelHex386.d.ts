@@ -4,7 +4,7 @@ import { BlockToJSON } from "./Block.js";
  */
 export interface IntelHex386ToJSON {
     /** The header lines of the Intel HEX file. */
-    _header: string[];
+    header: string[];
     /** An array of block data. */
     _blocks: BlockToJSON[];
 }
@@ -24,7 +24,7 @@ export interface FindInBlocksResult<T> {
  * Represents an Intel HEX 386 file.
  */
 export default class IntelHex386 {
-    private _header;
+    header: string[];
     private _blocks;
     /**
      * Creates a new IntelHex386 instance from an Intel HEX string.

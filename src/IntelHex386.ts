@@ -7,7 +7,7 @@ import parseRecord, { IntelHexRecordObject, IntelHexRecordType } from "./tools/p
  */
 export interface IntelHex386ToJSON{
   /** The header lines of the Intel HEX file. */
-  _header: string[];
+  header: string[];
   /** An array of block data. */
   _blocks: BlockToJSON[];
 }
@@ -29,7 +29,7 @@ export interface FindInBlocksResult<T>{
  * Represents an Intel HEX 386 file.
  */
 export default class IntelHex386{
-  private _header:string[] = [];
+  header:string[] = [];
   private _blocks:Block[] = [ new Block() ];
 
   /**
@@ -44,7 +44,7 @@ export default class IntelHex386{
   constructor(intelHex386Json:IntelHex386ToJSON);
   constructor(intelHex386:IntelHex386ToJSON|string){
     if (typeof intelHex386 === 'object'){
-      this._header = intelHex386._header;
+      this.header = intelHex386.header;
       this._blocks = intelHex386._blocks.map(b => new Block(b));
     } else {
       const intelHex386Lines = intelHex386.split(/\r?\n/g);
@@ -54,7 +54,7 @@ export default class IntelHex386{
         if (line[0] === ":"){
           records.push(parseRecord(line));
         } else {
-          this._header.push(line);
+          this.header.push(line);
         }
       }
   
@@ -136,12 +136,26 @@ export default class IntelHex386{
     return null;
   }
 
+
+  /** ## clone
+   * ---
+   * 
+   * Clone this intelHex386 file, no associations, completely clean clone.
+   */
+  clone():IntelHex386{
+    const thisJson = JSON.stringify(this);
+    const parsedJSON:IntelHex386ToJSON = JSON.parse(thisJson);
+    return new IntelHex386(parsedJSON);
+  }
+
+
+
   /**
    * Converts the object to an Intel HEX 386 document string.
    * @returns The Intel HEX 386 document as a string.
    */
   toIntelHex386Document():string{
-    let intelHex386Document = this._header.join('\r\n');
+    let intelHex386Document = this.header.join('\r\n');
 
     for (const block of this._blocks){
       intelHex386Document += block.getAsIntelHex386ExtendedLinearAddressBlock();
@@ -167,7 +181,7 @@ export default class IntelHex386{
    */
   private toJSON():IntelHex386ToJSON{
     return {
-      _header: this._header,
+      header: this.header,
       _blocks: this._blocks as unknown as BlockToJSON[]
     }
   }

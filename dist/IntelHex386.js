@@ -5,11 +5,11 @@ import parseRecord, { IntelHexRecordType } from "./tools/parseRecord.js";
  * Represents an Intel HEX 386 file.
  */
 export default class IntelHex386 {
-    _header = [];
+    header = [];
     _blocks = [new Block()];
     constructor(intelHex386) {
         if (typeof intelHex386 === 'object') {
-            this._header = intelHex386._header;
+            this.header = intelHex386.header;
             this._blocks = intelHex386._blocks.map(b => new Block(b));
         }
         else {
@@ -20,7 +20,7 @@ export default class IntelHex386 {
                     records.push(parseRecord(line));
                 }
                 else {
-                    this._header.push(line);
+                    this.header.push(line);
                 }
             }
             const getCurrentBlock = () => this._blocks[this._blocks.length - 1];
@@ -105,7 +105,7 @@ export default class IntelHex386 {
      * @returns The Intel HEX 386 document as a string.
      */
     toIntelHex386Document() {
-        let intelHex386Document = this._header.join('\r\n');
+        let intelHex386Document = this.header.join('\r\n');
         for (const block of this._blocks) {
             intelHex386Document += block.getAsIntelHex386ExtendedLinearAddressBlock();
         }
@@ -126,7 +126,7 @@ export default class IntelHex386 {
      */
     toJSON() {
         return {
-            _header: this._header,
+            header: this.header,
             _blocks: this._blocks
         };
     }
