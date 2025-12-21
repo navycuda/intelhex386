@@ -100,6 +100,16 @@ export default class IntelHex386 {
         }
         return null;
     }
+    /** ## clone
+     * ---
+     *
+     * Clone this intelHex386 file, no associations, completely clean clone.
+     */
+    clone() {
+        const thisJson = JSON.stringify(this);
+        const parsedJSON = JSON.parse(thisJson);
+        return new IntelHex386(parsedJSON);
+    }
     /**
      * Converts the object to an Intel HEX 386 document string.
      * @returns The Intel HEX 386 document as a string.

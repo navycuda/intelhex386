@@ -63,6 +63,12 @@ export default class IntelHex386 {
      * @returns A `FindInBlocksResult` object if the value is found, or null otherwise.
      */
     findInBlocks<T>(callback: (buffer: Buffer) => (T | null)): FindInBlocksResult<T> | null;
+    /** ## clone
+     * ---
+     *
+     * Clone this intelHex386 file, no associations, completely clean clone.
+     */
+    clone(): IntelHex386;
     /**
      * Converts the object to an Intel HEX 386 document string.
      * @returns The Intel HEX 386 document as a string.
