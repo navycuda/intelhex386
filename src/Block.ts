@@ -15,17 +15,17 @@ export interface BlockToJSON {
  * Represents a contiguous block of data in an Intel HEX file.
  */
 export class Block {
-  private _address: number = 0;
-  private _tempArray: number[] | undefined = [];
-  private _buffer: Buffer | undefined;
+  #address: number = 0;
+  #tempArray: number[] = [];
+  #buffer: Buffer | undefined;
 
   /**
    * The length of the data in the block.
    */
   get length(): number {
-    return (this._tempArray
-      ? this._tempArray.length
-      : this._buffer!.length
+    return (this.#tempArray
+      ? this.#tempArray.length
+      : this.#buffer!.length
     );
   }
 
@@ -33,14 +33,14 @@ export class Block {
    * The data buffer of the block.
    */
   get buffer():Buffer{
-    return this._buffer!;
+    return this.#buffer!;
   }
 
   /**
    * The starting address of the block.
    */
   get address():number{
-    return this._address;
+    return this.#address;
   }
 
   /**
@@ -54,10 +54,10 @@ export class Block {
   constructor(blockJson: BlockToJSON);
   constructor(blockJson?: BlockToJSON) {
     if (blockJson) {
-      this._address = parseInt(blockJson._address, 16) >>> 0;
-      this._buffer = Buffer.from(blockJson._buffer, 'base64');
+      this.#address = parseInt(blockJson._address, 16) >>> 0;
+      this.#buffer = Buffer.from(blockJson._buffer, 'base64');
 
-      delete this._tempArray;
+      this.#tempArray.length = 0;
     }
   }
 
@@ -65,28 +65,34 @@ export class Block {
    * Converts the temporary array of data into a Buffer.
    * @private
    */
-  private _buildBuffer(): void {
-    this._buffer = Buffer.from(this._tempArray!);
-    delete this._tempArray;
+  #buildBuffer(): void {
+    this.#buffer = Buffer.from(this.#tempArray!);
+    this.#tempArray.length = 0;
   }
 
   /**
    * Checks if the given address is within the range of this block.
-   * @param address - The address to check.
-   * @returns True if the address is within the block, false otherwise.
-   * @private
+   * @param {number} address - The address to check.
+   * @param {number} length - The data length to check.
+   * @returns {number} True if the address is within the block, false otherwise.
    */
-  private _hasAddress(address:number):boolean{
-    return address >= this._address && address <= (this._address + this.length);
+  #hasAddress(address:number, length:number):boolean{
+    const a = address >>> 0;
+    const l = (address + length) >>> 0;
+
+    const hasAddress = a >= this.#address && a <= (this.#address + this.length);
+    const hasEndAddress = l >= this.#address && l <= (this.#address + this.length);
+
+    return (hasAddress && hasEndAddress);
   }
 
   /**
    * Calculates the absolute address from a byte index within the block.
-   * @param byteIndex - The byte index within the block.
-   * @returns The absolute address.
+   * @param {number} byteIndex - The byte index within the block.
+   * @returns {number} The absolute address.
    */
   getAbsoluteAddressFromIndex(byteIndex:number):number{
-    return byteIndex + this._address;
+    return (byteIndex + this.#address) >>> 0;
   }
 
   /**
@@ -94,12 +100,12 @@ export class Block {
    * @returns The Intel HEX string representation of the block.
    */
   getAsIntelHex386ExtendedLinearAddressBlock():string{
-    if (!this._buffer) { throw new Error ("Buffer is missing from block, cannot create intelhex386 document"); }
+    if (!this.#buffer) { throw new Error ("Buffer is missing from block, cannot create intelhex386 document"); }
     let intelHex386Document = '';
     let cursorPosition = 0 >>> 0;
 
-    const getCurrentAddress = () => (this._address + cursorPosition);
-    const getBytesRemaining = () => ((this._address + this.length) - getCurrentAddress());
+    const getCurrentAddress = () => (this.#address + cursorPosition) >>> 0;
+    const getBytesRemaining = () => ((this.#address + this.length) - getCurrentAddress()) >>> 0;
 
     let firstPass = true;
 
@@ -117,45 +123,45 @@ export class Block {
       const length = bytesRemaining >= 0x20 ? 0x20 : bytesRemaining;
       const data = [];
       for (let d = 0; d < length; d++){
-        data.push(this._buffer[cursorPosition++]);
+        data.push(this.#buffer[cursorPosition++]);
       }
 
       intelHex386Document += getRecordString(currentAddress,IntelHexRecordType.Data,data);
     } while (getBytesRemaining() > 0)
-      
+
   
     return intelHex386Document;
   }
 
   /**
    * Adds a record to the block.
-   * @param record - The Intel HEX record to add.
+   * @param {IntelHexRecordObject} record - The Intel HEX record to add.
    * @returns True if the record was added successfully, false otherwise.
    */
   addRecord(record: IntelHexRecordObject): boolean {
     const { address, type, data } = record;
-    const currentAddress = () => this._address + this._tempArray!.length;
+    const currentAddress = () => this.#address + this.#tempArray!.length;
 
 
     switch (type) {
       case IntelHexRecordType.Data: {
-        if (this._tempArray!.length === 0) {
-          this._address += address;
+        if (this.#tempArray!.length === 0) {
+          this.#address += address;
         }
-        this._tempArray!.push(...data);
+        this.#tempArray!.push(...data);
         break;
       }
       case IntelHexRecordType.EndOfFile: {
-        this._buildBuffer();
+        this.#buildBuffer();
         break;
       }
       case IntelHexRecordType.ExtendedLinearAddress: {
         const ela = record.getExtendedLinearAddress()!;
         if (this.length === 0) {
-          this._address += ela;
+          this.#address += ela;
         }
         if (ela !== currentAddress()) {
-          this._buildBuffer();
+          this.#buildBuffer();
           return false;
         }
         break;
@@ -167,35 +173,32 @@ export class Block {
 
   /**
    * Reads data from the block.
-   * @param address - The starting address to read from.
-   * @param length - The number of bytes to read.
+   * @param {number} address - The starting address to read from.
+   * @param {number} length - The number of bytes to read.
    * @returns A Buffer containing the read data, or null if the address is not in the block.
    */
   read(address:number,length:number):Buffer|null{
-    if (!this._hasAddress) { return null; }
-    const start = address - this._address;
-    const end = start + length;
-    if (end > (this._address + this.length)) {
-      throw new Error('Block - Read length exceeds size of buffer');
+    if (!this.#hasAddress(address,length)) { 
+      throw new Error(`Block - Read length exceeds size of buffer 0x${address.toString(16).toUpperCase().padStart(8,'0')} - ${length} bytes`);
     }
-    return this._buffer!.subarray(start,end);
+    const start = address - this.#address;
+    const end = start + length;
+    return this.#buffer!.subarray(start,end);
   }
 
   /**
    * Writes data to the block.
-   * @param address - The starting address to write to.
-   * @param buffer - The data to write.
-   * @returns True if the write was successful, false otherwise.
+   * @param {number} address - The starting address to write to.
+   * @param {Buffer} buffer - The data to write.
+   * @returns {boolean} True if the write was successful, false otherwise.
    */
   write(address:number, buffer:Buffer):boolean{
-    if (!this._hasAddress) { return false; }
-    const start = address - this._address;
-    const end = start + buffer.length;
-    if (end > (this._address + this.length)) {
-      throw new Error('Block - Read length exceeds size of buffer');
+    if (!this.#hasAddress(address,buffer.length)) { 
+      throw new Error(`Block - Read length exceeds size of buffer 0x${address.toString(16).toUpperCase().padStart(8,'0')} - ${buffer.length} bytes`);
     }
-
-    buffer.copy(this._buffer!, start);
+    const start = address - this.#address;
+    const end = start + buffer.length;
+    buffer.copy(this.#buffer!, start);
     return true;
   }
 
@@ -207,8 +210,8 @@ export class Block {
    */
   private toJSON(): BlockToJSON {
     return {
-      _address: this._address.toString(16).padStart(8, "0"),
-      _buffer: this._buffer!.toString('base64')
+      _address: this.#address.toString(16).padStart(8, "0"),
+      _buffer: this.#buffer!.toString('base64')
     };
   }
 }
