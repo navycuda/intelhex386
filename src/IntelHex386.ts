@@ -80,7 +80,7 @@ export default class IntelHex386{
    */
   read(address:number|string,length:number){
     if (typeof address === "string"){
-      address = parseInt(address,16);
+      address = parseInt(address,16) >>> 0;
     }
     for (const block of this._blocks){
       const buffer = block.read(address,length);
@@ -97,7 +97,7 @@ export default class IntelHex386{
    */
   write(address:number|string,buffer:Buffer):boolean{
     if (typeof address === "string"){
-      address = parseInt(address,16);
+      address = parseInt(address,16) >>> 0;
     }
     for (const block of this._blocks){
       const result = block.write(address,buffer);
@@ -125,7 +125,7 @@ export default class IntelHex386{
   findInBlocks<T>(callback: (buffer:Buffer) => (T | null)): FindInBlocksResult<T> | null {
     for (let b = 0; b < this._blocks.length; b++){
       const result = callback(this._blocks[b].buffer);
-      if (result) { 
+      if (result !== null) { 
         return {
           index: b,
           address: this._blocks[b].address,
