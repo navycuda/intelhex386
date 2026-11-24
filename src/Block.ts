@@ -178,9 +178,7 @@ export class Block {
    * @returns A Buffer containing the read data, or null if the address is not in the block.
    */
   read(address:number,length:number):Buffer|null{
-    if (!this.#hasAddress(address,length)) { 
-      throw new Error(`Block - Read length exceeds size of buffer 0x${address.toString(16).toUpperCase().padStart(8,'0')} - ${length} bytes`);
-    }
+    if (!this.#hasAddress(address,length)) { return null; }
     const start = address - this.#address;
     const end = start + length;
     return this.#buffer!.subarray(start,end);
@@ -193,9 +191,7 @@ export class Block {
    * @returns {boolean} True if the write was successful, false otherwise.
    */
   write(address:number, buffer:Buffer):boolean{
-    if (!this.#hasAddress(address,buffer.length)) { 
-      throw new Error(`Block - Read length exceeds size of buffer 0x${address.toString(16).toUpperCase().padStart(8,'0')} - ${buffer.length} bytes`);
-    }
+    if (!this.#hasAddress(address,buffer.length)) { return false; }
     const start = address - this.#address;
     const end = start + buffer.length;
     buffer.copy(this.#buffer!, start);
