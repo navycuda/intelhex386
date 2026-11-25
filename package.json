@@ -2,8 +2,8 @@
   "name": "intelhex386",
   "version": "1.0.3",
   "description": "",
-  "main": "./dist/index.js",
-  "types": "./types/index.d.ts",
+  "main": "./dist/IntelHex386.js",
+  "types": "./types/IntelHex386.d.ts",
   "type": "module",
   "license": "AGPL-version-3.0",
   "private": false,
@@ -24,7 +24,8 @@
   },
   "contributors": [],
   "scripts": {
-    "start": "tsc && node dist/index.js",
+    "build": "tsc;",
+    "start": "",
     "dev": "tsc --watch",
     "test": ""
   },

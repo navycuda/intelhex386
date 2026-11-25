@@ -12,9 +12,7 @@ export interface BlockToJSON {
  * Represents a contiguous block of data in an Intel HEX file.
  */
 export declare class Block {
-    private _address;
-    private _tempArray;
-    private _buffer;
+    #private;
     /**
      * The length of the data in the block.
      */
@@ -37,21 +35,9 @@ export declare class Block {
      */
     constructor(blockJson: BlockToJSON);
     /**
-     * Converts the temporary array of data into a Buffer.
-     * @private
-     */
-    private _buildBuffer;
-    /**
-     * Checks if the given address is within the range of this block.
-     * @param address - The address to check.
-     * @returns True if the address is within the block, false otherwise.
-     * @private
-     */
-    private _hasAddress;
-    /**
      * Calculates the absolute address from a byte index within the block.
-     * @param byteIndex - The byte index within the block.
-     * @returns The absolute address.
+     * @param {number} byteIndex - The byte index within the block.
+     * @returns {number} The absolute address.
      */
     getAbsoluteAddressFromIndex(byteIndex: number): number;
     /**
@@ -61,22 +47,22 @@ export declare class Block {
     getAsIntelHex386ExtendedLinearAddressBlock(): string;
     /**
      * Adds a record to the block.
-     * @param record - The Intel HEX record to add.
+     * @param {IntelHexRecordObject} record - The Intel HEX record to add.
      * @returns True if the record was added successfully, false otherwise.
      */
     addRecord(record: IntelHexRecordObject): boolean;
     /**
      * Reads data from the block.
-     * @param address - The starting address to read from.
-     * @param length - The number of bytes to read.
+     * @param {number} address - The starting address to read from.
+     * @param {number} length - The number of bytes to read.
      * @returns A Buffer containing the read data, or null if the address is not in the block.
      */
     read(address: number, length: number): Buffer | null;
     /**
      * Writes data to the block.
-     * @param address - The starting address to write to.
-     * @param buffer - The data to write.
-     * @returns True if the write was successful, false otherwise.
+     * @param {number} address - The starting address to write to.
+     * @param {Buffer} buffer - The data to write.
+     * @returns {boolean} True if the write was successful, false otherwise.
      */
     write(address: number, buffer: Buffer): boolean;
     /**
